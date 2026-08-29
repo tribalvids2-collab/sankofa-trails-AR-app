@@ -22,21 +22,29 @@
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   html,body{
-    background: var(--bg);
     color: var(--text);
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
   }
+  html{ background: var(--bg); }
   body{
     max-width: 560px;
     margin: 0 auto;
     padding: 24px 18px 60px;
+    /* Faint Adinkra-pattern watermark: dark tint over the tiled artwork so
+       it reads as texture, not wallpaper. Panels/cards sit opaque on top. */
+    background-image:
+      linear-gradient(rgba(13,27,28,0.93), rgba(13,27,28,0.93)),
+      url('images/background.png');
+    background-repeat: repeat, repeat;
+    background-size: auto, 360px;
   }
   h1,h2,h3{ font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.01em; }
   .mono{ font-family: 'IBM Plex Mono', monospace; }
 
-  header{ margin-bottom: 22px; }
+  header{ margin-bottom: 22px; display:flex; align-items:center; gap:14px; }
+  .brand-logo{ height:44px; width:44px; object-fit:contain; flex:0 0 auto; }
   .eyebrow{
     font-family:'IBM Plex Mono', monospace;
     font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
@@ -198,9 +206,12 @@
 <body>
 
 <header>
-  <div class="eyebrow">Waypoint · Barbados Trail</div>
-  <h1>Geofence Audio Guide</h1>
-  <p>Ambient narration triggers by outer zone. AR photo points fire independently inside each zone.</p>
+  <img class="brand-logo" src="images/logo.png" alt="Sankofa" />
+  <div>
+    <div class="eyebrow">Waypoint · Barbados Trail</div>
+    <h1>Geofence Audio Guide</h1>
+    <p>Ambient narration triggers by outer zone. AR photo points fire independently inside each zone.</p>
+  </div>
 </header>
 
 <div class="panel" id="gpsBanner" style="margin-bottom:18px; border-color: var(--coral);">
