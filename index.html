@@ -312,7 +312,7 @@ const LOCATIONS = [
     name: 'Salters, St. George',
     center: { lat: 13.120526, lon: -59.565983 },
     radius: 342,
-    audioSeed: 220,
+    audioFile: 'audio/salters.mp3',
     innerPoints: [
       { id:'salters-1', lat:13.120856, lon:-59.563980, radius:8, mode:'ar_overlay', image:'front_door_1920.jpg', label:'Front Door' }
     ]
@@ -322,7 +322,7 @@ const LOCATIONS = [
     name: 'Constitution River',
     center: { lat: 13.097276, lon: -59.608973 },
     radius: 213,
-    audioSeed: 246,
+    audioFile: 'audio/bridgetown.mp3',
     innerPoints: [
       { id:'constitution-1', lat:13.097286, lon:-59.608105, radius:8, mode:'ar_overlay', image:'front_door_1920.jpg', label:'River Bend' },
       { id:'constitution-2', lat:13.097100, lon:-59.610710, radius:8, mode:'ar_overlay', image:'front_door_1920.jpg', label:'Upstream Marker' },
@@ -334,7 +334,7 @@ const LOCATIONS = [
     name: "Joe's River",
     center: { lat: 13.214128, lon: -59.526361 },
     radius: 241,
-    audioSeed: 261,
+    audioFile: 'audio/joesriver.mp3',
     innerPoints: [
       { id:'joesriver-1', lat:13.213420, lon:-59.524455, radius:8, mode:'ar_overlay', image:'front_door_1920.jpg', label:'Forest Marker' }
     ]
@@ -344,7 +344,7 @@ const LOCATIONS = [
     name: 'Tent Bay',
     center: { lat: 13.211619, lon: -59.518437 },
     radius: 482,
-    audioSeed: 196,
+    audioFile: 'audio/tentbay.mp3',
     innerPoints: [
       { id:'tentbay-1', lat:13.212221, lon:-59.522656, radius:8, mode:'ar_overlay', image:'front_door_1920.jpg', label:'Bay Lookout' }
     ]
@@ -369,36 +369,63 @@ function haversine(lat1, lon1, lat2, lon2){
 function fmtM(m){ return m < 1000 ? Math.round(m)+'m' : (m/1000).toFixed(2)+'km'; }
 
 /* ---------------- AUDIO ENGINE ---------------- */
+// One <audio> element per zone, pre-created so the first geofence trigger
+// can just call .play() instead of constructing/loading on the fly.
+const AUDIO_ELS = {}; // location id -> HTMLAudioElement
+function initAudioElements(){
+  LOCATIONS.forEach(loc => {
+    if(!loc.audioFile) return;
+    const a = new Audio(loc.audioFile);
+    a.loop = true;
+    a.preload = 'auto';
+    a.volume = 0;
+    AUDIO_ELS[loc.id] = a;
+  });
+  // Mobile browsers block audio.play() until a user gesture. Geofence
+  // triggers fire from watchPosition, not a click, so prime every element
+  // on the first tap/click anywhere in the app to unlock playback for later.
+  const unlock = () => {
+    Object.values(AUDIO_ELS).forEach(a => {
+      a.play().then(() => a.pause()).catch(() => {});
+    });
+  };
+  window.addEventListener('touchend', unlock, { once: true });
+  window.addEventListener('click', unlock, { once: true });
+}
+
 const AudioEngine = (() => {
-  let ctx = null;
-  const nodes = {}; // id -> {osc, lfo, gain}
-  function ensureCtx(){ if(!ctx){ ctx = new (window.AudioContext||window.webkitAudioContext)(); } return ctx; }
-  function start(id, baseFreq){
-    const c = ensureCtx();
-    if(nodes[id]) return;
-    const osc = c.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = baseFreq;
-    const lfo = c.createOscillator();
-    lfo.type = 'sine'; lfo.frequency.value = 0.15;
-    const lfoGain = c.createGain(); lfoGain.gain.value = 6;
-    lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
-    const gain = c.createGain();
-    gain.gain.value = 0.0001;
-    osc.connect(gain); gain.connect(c.destination);
-    osc.start(); lfo.start();
-    gain.gain.linearRampToValueAtTime(0.05, c.currentTime + 1.2);
-    nodes[id] = { osc, lfo, gain };
+  const active = new Set();
+  const FADE_MS = 1200;
+  const FADE_STEPS = 24;
+  function fade(audio, from, to, onDone){
+    clearInterval(audio._fadeTimer);
+    audio.volume = from;
+    let i = 0;
+    audio._fadeTimer = setInterval(() => {
+      i++;
+      audio.volume = Math.max(0, Math.min(1, from + (to - from) * (i / FADE_STEPS)));
+      if(i >= FADE_STEPS){
+        clearInterval(audio._fadeTimer);
+        audio.volume = to;
+        if(onDone) onDone();
+      }
+    }, FADE_MS / FADE_STEPS);
+  }
+  function start(id){
+    const audio = AUDIO_ELS[id];
+    if(!audio || active.has(id)) return;
+    active.add(id);
+    audio.currentTime = 0;
+    audio.play().catch(err => console.warn('Audio blocked — needs a user tap first:', err));
+    fade(audio, 0, 1);
   }
   function stop(id){
-    const n = nodes[id];
-    if(!n) return;
-    const c = ensureCtx();
-    n.gain.gain.linearRampToValueAtTime(0.0001, c.currentTime + 1.0);
-    setTimeout(() => { try{ n.osc.stop(); n.lfo.stop(); }catch(e){} }, 1200);
-    delete nodes[id];
+    const audio = AUDIO_ELS[id];
+    if(!audio || !active.has(id)) return;
+    active.delete(id);
+    fade(audio, audio.volume, 0, () => audio.pause());
   }
-  function anyPlaying(){ return Object.keys(nodes).length > 0; }
+  function anyPlaying(){ return active.size > 0; }
   return { start, stop, anyPlaying };
 })();
 
@@ -653,7 +680,7 @@ function evaluate(){
     const wasInside = insideZones.has(loc.id);
     if(inside && !wasInside){
       insideZones.add(loc.id);
-      AudioEngine.start(loc.id, loc.audioSeed);
+      AudioEngine.start(loc.id);
       log(`Entered <b>${loc.name}</b> — audio started`, 'audio');
     } else if(!inside && wasInside){
       insideZones.delete(loc.id);
@@ -688,6 +715,7 @@ window.__openARPoint = function(pointId){
 };
 
 /* ---------------- INIT ---------------- */
+initAudioElements();
 renderJumpGrid();
 evaluate();
 requestGPS();
