@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Waypoint — Geofence Audio Trail</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1b1c">
+<link rel="icon" href="images/icon-192.png">
+<link rel="apple-touch-icon" href="images/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sankofa Trails">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -87,6 +95,12 @@
   .status-pill .dot{ width:6px; height:6px; border-radius:50%; background: var(--text-faint); }
   .status-pill.on{ color: var(--teal); border-color: rgba(79,184,168,0.4); }
   .status-pill.on .dot{ background: var(--teal); box-shadow: 0 0 6px var(--teal); }
+
+  /* ---- Install banner ---- */
+  .install-btn{
+    flex:0 0 auto; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--teal);
+    background: rgba(79,184,168,0.12); color: var(--text); font-size: 13px; font-family: inherit; cursor:pointer;
+  }
 
   /* ---- Position control ---- */
   section{ margin-bottom: 22px; }
@@ -201,6 +215,33 @@
     color: #fff; font-size: 16px; cursor:pointer;
   }
   .ar-status{ position:absolute; top:20px; left:20px; z-index:5; font-family:'IBM Plex Mono',monospace; font-size:10px; color: rgba(255,255,255,0.5); }
+
+  /* ---- AR point selection gallery ---- */
+  .gallery-overlay{
+    position: fixed; inset:0; background: rgba(6,14,15,0.92); display:none; align-items:center; justify-content:center;
+    z-index: 55; padding: 24px;
+  }
+  .gallery-overlay.open{ display:flex; }
+  .gallery-panel{
+    width:100%; max-width: 420px; background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: 18px; padding: 20px; max-height: 80vh; overflow-y:auto;
+  }
+  .gallery-title{ font-family:'Fraunces', serif; font-size: 18px; margin-bottom: 4px; }
+  .gallery-sub{ font-size: 12px; color: var(--text-dim); margin-bottom: 16px; }
+  .gallery-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gallery-item{
+    display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;
+    background: var(--bg-raised); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 10px; color: var(--text); cursor:pointer; font-family: inherit;
+  }
+  .gallery-item:active{ border-color: var(--coral); background: var(--coral-dim); }
+  .gallery-item svg{ width:28px; height:28px; opacity:0.85; }
+  .gallery-item .gname{ font-size: 13px; }
+  .gallery-item .gzone{ font-size: 11px; color: var(--text-faint); }
+  .gallery-close{
+    display:block; margin: 16px auto 0; padding: 9px 16px; border-radius: 10px;
+    border: 1px solid var(--line); background: transparent; color: var(--text-dim); font-family: inherit; cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -221,6 +262,16 @@
       <div class="gps-msg" id="gpsBannerMsg" style="margin-top:4px;">Allow location access when prompted.</div>
     </div>
     <button class="nudge-btn" onclick="requestGPS()" style="flex:0 0 auto;">Retry</button>
+  </div>
+</div>
+
+<div class="panel" id="installBanner" style="display:none; margin-bottom:18px; border-color: var(--teal);">
+  <div style="display:flex; align-items:center; gap:10px; justify-content:space-between;">
+    <div>
+      <div style="font-size:13px; font-weight:600;" id="installBannerTitle">Install this app</div>
+      <div class="gps-msg" id="installBannerMsg" style="margin-top:4px;">Install Sankofa Trails for quick, full-screen access on your trail walk.</div>
+    </div>
+    <button class="install-btn" id="installBtn" onclick="doInstall()">Install App</button>
   </div>
 </div>
 
@@ -315,6 +366,15 @@
   </div>
 </div>
 
+<div class="gallery-overlay" id="galleryOverlay">
+  <div class="gallery-panel">
+    <div class="gallery-title">Multiple points nearby</div>
+    <div class="gallery-sub">You're in range of more than one AR point — pick which one to view.</div>
+    <div class="gallery-grid" id="galleryGrid"></div>
+    <button class="gallery-close" onclick="hideGallery()">Close</button>
+  </div>
+</div>
+
 <script>
 /* ---------------- DATA ---------------- */
 const LOCATIONS = [
@@ -368,6 +428,31 @@ let pos = { lat: 13.120074, lon: -59.568913 }; // fallback until real GPS report
 let watchId = null;
 let insideZones = new Set();
 let triggeredPoints = new Set();
+
+// GPS readings past this accuracy (meters) are ignored outright — a cold-start
+// fix can be off by hundreds of meters and shouldn't move the dot at all.
+const GPS_ACCURACY_THRESHOLD_M = 50;
+// A candidate zone/point entry or exit only takes effect once this many
+// consecutive GPS readings agree, so a single noisy fix can't fire a trigger.
+// Manual/simulate mode has no accuracy figure to filter on, so it always
+// commits instantly and skips this confirmation step entirely.
+const CONFIRM_READINGS_REQUIRED = 3;
+const pendingZoneState = {};  // loc.id -> { state, count }
+const pendingPointState = {}; // point.id -> { state, count }
+
+function confirmTransition(store, id, candidateState){
+  const pending = store[id];
+  if(pending && pending.state === candidateState){
+    pending.count++;
+  } else {
+    store[id] = { state: candidateState, count: 1 };
+  }
+  if(store[id].count >= CONFIRM_READINGS_REQUIRED){
+    delete store[id];
+    return true;
+  }
+  return false;
+}
 
 /* ---------------- GEO MATH ---------------- */
 function haversine(lat1, lon1, lat2, lon2){
@@ -459,6 +544,10 @@ function setBanner(title, msg, ok){
 }
 function setMode(m){
   mode = m;
+  // A fresh sequence of readings should start its own confirmation count,
+  // not inherit a partial count left over from the other source.
+  Object.keys(pendingZoneState).forEach(k => delete pendingZoneState[k]);
+  Object.keys(pendingPointState).forEach(k => delete pendingPointState[k]);
   document.getElementById('btnManual').classList.toggle('active', m==='manual');
   document.getElementById('btnGPS').classList.toggle('active', m==='gps');
   const inputs = document.querySelectorAll('.coord-row input, .nudge-grid button');
@@ -492,9 +581,17 @@ function requestGPS(){
   setBanner('Requesting device location…', 'Allow location access when your browser prompts you.', false);
 
   watchId = navigator.geolocation.watchPosition(p => {
+    const accuracy = p.coords.accuracy;
+    if(accuracy > GPS_ACCURACY_THRESHOLD_M){
+      // Reading is too imprecise to trust at all (common on a cold GPS fix) —
+      // ignore it completely rather than moving the dot or evaluating zones.
+      setBanner('', '', true);
+      document.getElementById('gpsMsg').textContent = `Live GPS · accuracy ±${Math.round(accuracy)}m — too low, waiting for a better fix (need ≤${GPS_ACCURACY_THRESHOLD_M}m)`;
+      return;
+    }
     pos = { lat: p.coords.latitude, lon: p.coords.longitude };
     setBanner('', '', true); // hides banner once we have a real fix
-    document.getElementById('gpsMsg').textContent = `Live GPS · accuracy ±${Math.round(p.coords.accuracy)}m`;
+    document.getElementById('gpsMsg').textContent = `Live GPS · accuracy ±${Math.round(accuracy)}m`;
     document.getElementById('latInput').value = pos.lat.toFixed(6);
     document.getElementById('lonInput').value = pos.lon.toFixed(6);
     evaluate();
@@ -576,6 +673,28 @@ function openAR(point){
 function closeAR(){
   document.getElementById('arOverlay').classList.remove('open');
   if(arStream){ arStream.getTracks().forEach(t => t.stop()); arStream = null; }
+}
+
+/* ---------------- AR POINT GALLERY ---------------- */
+function showGallery(points){
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = points.map(p => {
+    const loc = LOCATIONS.find(l => l.innerPoints.some(pt => pt.id === p.id));
+    return `<button class="gallery-item" onclick='selectGalleryPoint("${p.id}")'>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 7h3l2-2h8l2 2h3v13H3z"/><circle cx="12" cy="13" r="4"/></svg>
+      <span class="gname">${p.label}</span>
+      <span class="gzone">${loc ? loc.name : ''}</span>
+    </button>`;
+  }).join('');
+  document.getElementById('galleryOverlay').classList.add('open');
+}
+function hideGallery(){
+  document.getElementById('galleryOverlay').classList.remove('open');
+}
+function selectGalleryPoint(pointId){
+  hideGallery();
+  const p = findPointById(pointId);
+  if(p) openAR(p);
 }
 
 /* ---------------- QUICK JUMP ---------------- */
@@ -678,8 +797,21 @@ function renderRadar(nearest, dist, inside){
 }
 
 /* ---------------- EVALUATE (core trigger logic) ---------------- */
+function findPointById(pointId){
+  for(const loc of LOCATIONS){
+    const p = loc.innerPoints.find(pt => pt.id === pointId);
+    if(p) return p;
+  }
+  return null;
+}
+
 function evaluate(){
   let nearest = null, nearestDist = Infinity, nearestInside = false;
+  // Manual/simulate mode has no GPS accuracy figure and is meant for instant
+  // desk testing, so only real GPS mode requires consecutive confirming reads.
+  const requireConfirmation = (mode === 'gps');
+  let anyPointEntered = false;
+  let anyPointChanged = false;
 
   LOCATIONS.forEach(loc => {
     const dist = haversine(pos.lat, pos.lon, loc.center.lat, loc.center.lon);
@@ -689,14 +821,21 @@ function evaluate(){
 
     // --- Outer audio zone transitions ---
     const wasInside = insideZones.has(loc.id);
-    if(inside && !wasInside){
-      insideZones.add(loc.id);
-      AudioEngine.start(loc.id);
-      log(`Entered <b>${loc.name}</b> — audio started`, 'audio');
-    } else if(!inside && wasInside){
-      insideZones.delete(loc.id);
-      AudioEngine.stop(loc.id);
-      log(`Left <b>${loc.name}</b> — audio stopped`, 'audio');
+    if(inside !== wasInside){
+      const confirmed = !requireConfirmation || confirmTransition(pendingZoneState, loc.id, inside);
+      if(confirmed){
+        if(inside){
+          insideZones.add(loc.id);
+          AudioEngine.start(loc.id);
+          log(`Entered <b>${loc.name}</b> — audio started`, 'audio');
+        } else {
+          insideZones.delete(loc.id);
+          AudioEngine.stop(loc.id);
+          log(`Left <b>${loc.name}</b> — audio stopped`, 'audio');
+        }
+      }
+    } else {
+      delete pendingZoneState[loc.id];
     }
 
     // --- Inner AR trigger points (independent of audio) ---
@@ -704,32 +843,113 @@ function evaluate(){
       const pd = haversine(pos.lat, pos.lon, p.lat, p.lon);
       const trig = pd <= p.radius;
       const wasTrig = triggeredPoints.has(p.id);
-      if(trig && !wasTrig){
-        triggeredPoints.add(p.id);
-        log(`AR trigger reached — <b>${p.label}</b> (${loc.name})`, 'ar');
-        openAR(p);
-      } else if(!trig && wasTrig){
-        triggeredPoints.delete(p.id);
+      if(trig !== wasTrig){
+        const confirmed = !requireConfirmation || confirmTransition(pendingPointState, p.id, trig);
+        if(confirmed){
+          anyPointChanged = true;
+          if(trig){
+            triggeredPoints.add(p.id);
+            log(`AR trigger reached — <b>${p.label}</b> (${loc.name})`, 'ar');
+            anyPointEntered = true;
+          } else {
+            triggeredPoints.delete(p.id);
+          }
+        }
+      } else {
+        delete pendingPointState[p.id];
       }
     });
   });
+
+  if(anyPointChanged) handleInnerTriggers(anyPointEntered);
 
   renderZoneList();
   renderRadar(nearest, nearestDist, nearestInside);
 }
 
-window.__openARPoint = function(pointId){
-  for(const loc of LOCATIONS){
-    const p = loc.innerPoints.find(pt => pt.id === pointId);
-    if(p) return openAR(p);
+// Decides what the AR UI should show given everything currently in range:
+// a single point auto-opens its AR view as before, but two or more at once
+// go to a combined gallery so the user picks one instead of overlays fighting
+// each other for the same modal. Runs on every entry/exit so the gallery list
+// stays accurate as points leave range too, but only auto-opens/closes the
+// camera view on a fresh entry — never as a surprise side effect of someone
+// else walking out of range.
+function handleInnerTriggers(hasNewEntry){
+  const inRange = [...triggeredPoints].map(findPointById).filter(Boolean);
+  if(inRange.length >= 2){
+    if(hasNewEntry) closeAR();
+    showGallery(inRange);
+  } else if(inRange.length === 1){
+    hideGallery();
+    if(hasNewEntry) openAR(inRange[0]);
+  } else {
+    hideGallery();
   }
+}
+
+window.__openARPoint = function(pointId){
+  const p = findPointById(pointId);
+  if(p) return openAR(p);
 };
+
+/* ---------------- PWA INSTALL ---------------- */
+let deferredInstallPrompt = null;
+
+function isStandaloneDisplay(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function isIOSSafari(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+function showInstallBanner(kind){
+  const banner = document.getElementById('installBanner');
+  const btn = document.getElementById('installBtn');
+  banner.style.display = 'block';
+  if(kind === 'ios'){
+    document.getElementById('installBannerMsg').innerHTML = 'iOS doesn\'t support an automatic install button — in Safari, tap the Share icon, then "Add to Home Screen."';
+    btn.style.display = 'none';
+  } else {
+    document.getElementById('installBannerMsg').textContent = 'Install Sankofa Trails for quick, full-screen access on your trail walk.';
+    btn.style.display = 'inline-block';
+  }
+}
+function hideInstallBanner(){
+  document.getElementById('installBanner').style.display = 'none';
+}
+async function doInstall(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  hideInstallBanner();
+}
+function initInstallUI(){
+  if(isStandaloneDisplay()) return; // already installed — nothing to prompt
+  if(isIOSSafari()) showInstallBanner('ios');
+  // Android/Chrome shows its own button once beforeinstallprompt fires (below).
+}
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  showInstallBanner('android');
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  hideInstallBanner();
+});
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker registration failed:', err));
+  });
+}
 
 /* ---------------- INIT ---------------- */
 initAudioElements();
 renderJumpGrid();
 evaluate();
 requestGPS();
+initInstallUI();
 </script>
 </body>
 </html>
