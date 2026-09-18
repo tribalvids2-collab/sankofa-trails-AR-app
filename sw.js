@@ -1,12 +1,17 @@
-const CACHE_NAME = 'sankofa-trails-v1';
+const CACHE_NAME = 'sankofa-trails-v2';
 const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './images/background.png',
   './images/logo.png',
-  './images/icon-192.png',
-  './images/icon-512.png',
+  './images/logo-mark.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/icon-maskable-192.png',
+  './icons/icon-maskable-512.png',
+  './icons/apple-touch-icon.png',
+  './icons/favicon-32.png',
   './audio/salters.mp3',
   './audio/bridgetown.mp3',
   './audio/joesriver.mp3',
