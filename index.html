@@ -527,6 +527,23 @@ $('panClose').onclick=()=>{
 /* ============================================================
    START
    ============================================================ */
+/* ---------- Phone Back button ---------- */
+const BACK_PARENT={intro:'welcome',options:'welcome',story:'options',points:'options',point:'points'};
+let lastBackAt=0, armed=false;
+function arm(){ try{ history.pushState({s:'app'},''); }catch(e){} }
+// Armed on the first tap (browsers ignore history entries made before any interaction).
+document.addEventListener('click',()=>{ if(!armed){ armed=true; try{ history.replaceState({s:'base'},''); }catch(e){} arm(); } },true);
+window.addEventListener('popstate',()=>{
+  if(!armed) return;
+  if($('camView').classList.contains('on')){ $('camClose').click(); arm(); return; }
+  if($('panView').classList.contains('on')){ $('panClose').click(); arm(); return; }
+  const mw=$('mapWrap'); if(mw){ mw.remove(); arm(); return; }
+  if(BACK_PARENT[current]){ go(BACK_PARENT[current]); arm(); return; }
+  const now=Date.now();
+  if(now-lastBackAt<2500){ armed=false; history.back(); return; }
+  lastBackAt=now; toast('Press back again to leave'); arm();
+});
+
 buildWelcome();
 if(new URLSearchParams(location.search).has('dev')) $('dev').open=true;
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>log('sw failed',e.message))); }
