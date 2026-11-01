@@ -86,10 +86,16 @@ button.card{cursor:pointer}
   </div>
   <p class="mono center" style="margin-top:26px">CHOOSE YOUR TRAIL</p>
   <div id="placeList"></div>
+  <div id="zoneMsg"></div>
   <p class="notice">Use headphones if you can, keep your volume up, and stay aware of traffic and uneven ground as you walk. Tap a trail to begin; you will be asked to allow location access so the app knows when you reach each point.</p>
-  <details class="dev" id="dev">
-    <summary>Desk testing</summary>
-    <label><input type="checkbox" id="simOn" style="width:auto"> Simulate location (no GPS)</label>
+  <details class="dev" id="dev" style="display:none">
+    <summary>Testing mode: <span id="modeName">Public</span></summary>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <button class="btn ghost modeBtn" data-mode="public" style="padding:10px 6px;font-size:.8rem">Public</button>
+      <button class="btn ghost modeBtn" data-mode="desk" style="padding:10px 6px;font-size:.8rem;margin:0">Desk test</button>
+      <button class="btn ghost modeBtn" data-mode="field" style="padding:10px 6px;font-size:.8rem;margin:0">Field test</button>
+    </div>
+    <p class="mono" style="margin-top:8px">PUBLIC: as visitors see it. DESK: fake location. FIELD: real GPS, trails open only inside their zone.</p>
     <div class="mono" id="devLog" style="white-space:pre-wrap;margin-top:8px"></div>
   </details>
 </section>
@@ -241,7 +247,7 @@ function pointAssets(p,pt){
 /* ============================================================
    SCREENS
    ============================================================ */
-let current='welcome', place=null;
+let current='welcome', place=null, MODE='public';
 function go(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   $('s-'+name).classList.add('on'); current=name; window.scrollTo(0,0);
@@ -288,7 +294,24 @@ function buildWelcome(){
 /* ---------- Intro chain ---------- */
 let introQueue=[], introIdx=0, introOn=false;
 function openPlace(p){
-  unlockAudio(); place=p;
+  unlockAudio();
+  if(MODE==='field'){ checkZone(p).then(ok=>{ if(ok) startPlace(p); }); return; }
+  startPlace(p);
+}
+function checkZone(p){
+  const m=$('zoneMsg'); m.innerHTML='<div class="banner">Checking your location&hellip;</div>';
+  return new Promise(res=>{
+    if(!navigator.geolocation){ m.innerHTML='<div class="banner err">This device does not support location.</div>'; res(false); return; }
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const c=pos.coords, d=haversine(c.latitude,c.longitude,p.center.lat,p.center.lon), slack=Math.min(c.accuracy||0,25);
+      log('zone check',p.id,Math.round(d)+'m from centre, accuracy',Math.round(c.accuracy)+'m');
+      if(d<=p.radius+slack){ m.innerHTML=''; res(true); }
+      else{ m.innerHTML='<div class="banner">You need to be at '+p.name+' to begin this trail. You are about '+Math.round(d-p.radius)+' m outside the trail area.</div>'; res(false); }
+    },e=>{ m.innerHTML='<div class="banner err">Could not find your location ('+(e.code===1?'location permission is blocked':'no GPS signal')+').</div>'; res(false); },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+  });
+}
+function startPlace(p){
+  place=p;
   $('introTitle').textContent=p.name+(p.alt?' ('+p.alt+')':'');
   $('introMsg').innerHTML=''; $('introGo').textContent='Skip to options';
   introQueue=[{src:GENERAL_INTRO,label:'Welcome'},{src:base(p)+'intro.mp3',label:p.name+' introduction'}];
@@ -352,7 +375,7 @@ storyAudio.onended=()=>{ $('storyPlay').textContent='Play'; };
    GEOFENCE
    ============================================================ */
 let watchId=null, lastPos=null, visited={}, nearId=null, pending={id:null,count:0};
-function sim(){ return $('simOn').checked; }
+function sim(){ return MODE==='desk'; }
 function startGPS(){
   renderPoints(); $('ptsStatus').innerHTML='';
   if(sim()){ onSim(); $('simPoint').onchange=onSim; return; }
@@ -547,7 +570,21 @@ window.addEventListener('popstate',()=>{
 });
 
 buildWelcome();
-if(new URLSearchParams(location.search).has('dev')) $('dev').open=true;
+/* ---------- Testing mode (only for people who opened the link with ?dev) ---------- */
+let DEV=false;
+try{ if(new URLSearchParams(location.search).has('dev')) localStorage.setItem('sankofaDev','1'); DEV=localStorage.getItem('sankofaDev')==='1'; }catch(e){ DEV=new URLSearchParams(location.search).has('dev'); }
+try{ if(DEV){ const m=localStorage.getItem('sankofaMode'); if(m==='desk'||m==='field') MODE=m; } }catch(e){}
+function refreshMode(){
+  $('modeName').textContent={public:'Public',desk:'Desk test',field:'Field test'}[MODE];
+  document.querySelectorAll('.modeBtn').forEach(b=>{ b.style.borderColor=b.dataset.mode===MODE?'var(--coral)':''; b.style.color=b.dataset.mode===MODE?'var(--coral)':''; });
+  $('simBar').style.display=(sim()&&current==='points')?'block':'none';
+  $('zoneMsg').innerHTML='';
+}
+if(DEV){
+  $('dev').style.display='block'; $('dev').open=true;
+  document.querySelectorAll('.modeBtn').forEach(b=>b.onclick=()=>{ MODE=b.dataset.mode; try{ localStorage.setItem('sankofaMode',MODE); }catch(e){} refreshMode(); toast('Mode: '+$('modeName').textContent); });
+  refreshMode();
+}
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>log('sw failed',e.message))); }
 window.addEventListener('error',e=>log('JS error',e.message));
 </script>
