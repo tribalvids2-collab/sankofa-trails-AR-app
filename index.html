@@ -127,6 +127,7 @@ button.card{cursor:pointer}
   <div class="top"><button class="back" data-go="options">&larr; Back</button></div>
   <h2 id="storyTitle"></h2>
   <p id="storyCredit"></p>
+  <img class="pic" id="storyArt" alt="" style="display:none">
   <div class="player">
     <div class="mono" id="storyTime">0:00</div>
     <div class="bar"><i id="storyBar"></i></div>
@@ -337,6 +338,7 @@ function showMap(){
 function openStory(){
   $('storyTitle').textContent=place.name; $('storyCredit').textContent=place.credit||''; $('storyMsg').innerHTML='';
   $('storyPlay').textContent='Play'; $('storyBar').style.width='0%'; $('storyTime').textContent='0:00';
+  const art=$('storyArt'); art.style.display='none'; art.onload=()=>{ art.style.display='block'; }; art.onerror=()=>{ art.style.display='none'; log('story art missing',art.src); }; art.src=base(place)+'story/story.jpg';
   storyAudio.src=base(place)+'story.mp3'; audioFail(storyAudio,'story',$('storyMsg'));
   go('story'); storyAudio.play().then(()=>$('storyPlay').textContent='Pause').catch(e=>log('story play blocked',e.name));
 }
