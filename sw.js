@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sankofa-trails-v2';
+const CACHE_NAME = 'sankofa-trails-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -11,11 +11,7 @@ const CORE_ASSETS = [
   './icons/icon-maskable-192.png',
   './icons/icon-maskable-512.png',
   './icons/apple-touch-icon.png',
-  './icons/favicon-32.png',
-  './audio/salters.mp3',
-  './audio/bridgetown.mp3',
-  './audio/joesriver.mp3',
-  './audio/tentbay.mp3'
+  './icons/favicon-32.png'
 ];
 
 self.addEventListener('install', event => {
@@ -34,21 +30,25 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Cache-first for our own assets so the trail still works with a weak or
-// dropped connection out on the route; fall back to network for anything else.
+// Network first, cache as the fallback: after a new version is pushed, visitors
+// get it on their next load instead of a stale copy, and pages and pictures they
+// have already opened still work if the signal drops. Audio is left to the
+// browser: caching it breaks seeking on iPhones and the files are large.
 self.addEventListener('fetch', event => {
-  if(event.request.method !== 'GET') return;
+  const req = event.request;
+  if(req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if(url.origin !== self.location.origin) return;
+  if(/\.(mp3|m4a|wav|mp4)$/i.test(url.pathname)) return;
+  if(req.headers.has('range')) return;
 
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if(cached) return cached;
-      return fetch(event.request).then(response => {
-        if(response && response.ok && event.request.url.startsWith(self.location.origin)){
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-        }
-        return response;
-      }).catch(() => cached);
-    })
+    fetch(req).then(response => {
+      if(response && response.ok && response.status === 200){
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+      }
+      return response;
+    }).catch(() => caches.match(req).then(cached => cached || caches.match('./index.html')))
   );
 });

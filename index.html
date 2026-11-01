@@ -1,955 +1,536 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Waypoint — Geofence Audio Trail</title>
-<link rel="manifest" href="manifest.json">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d1b1c">
-<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Sankofa Trails">
+<title>Sankofa Trails</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg: #0d1b1c;
-    --bg-raised: #142627;
-    --bg-card: #16292a;
-    --line: #22393a;
-    --coral: #e2895a;
-    --coral-dim: #7a4f39;
-    --teal: #4fb8a8;
-    --text: #eef2ee;
-    --text-dim: #96a6a3;
-    --text-faint: #5f7371;
-    --danger: #d16158;
-  }
-  *{box-sizing:border-box; margin:0; padding:0;}
-  html,body{
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
-  }
-  html{ background: var(--bg); }
-  body{
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 24px 18px 60px;
-    /* Adinkra-pattern backdrop: light dark-tint over the tiled artwork so the
-       pattern itself stays visible. Panels/cards sit opaque on top. */
-    background-image:
-      linear-gradient(rgba(13,27,28,0.55), rgba(13,27,28,0.55)),
-      url('images/background.png');
-    background-repeat: repeat, repeat;
-    background-size: auto, 360px;
-  }
-  h1,h2,h3{ font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.01em; }
-  .mono{ font-family: 'IBM Plex Mono', monospace; }
-
-  header{ margin-bottom: 22px; display:flex; align-items:center; gap:14px; }
-  .brand-logo{ height:44px; width:44px; object-fit:contain; flex:0 0 auto; }
-  .eyebrow{
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--teal); margin-bottom: 6px;
-  }
-  header h1{ font-size: 30px; line-height: 1.15; color: var(--text); }
-  header p{ color: #ffffff; font-size: 14px; margin-top: 6px; }
-
-  /* ---- Signature radar ---- */
-  .radar-wrap{
-    background: radial-gradient(circle at 50% 30%, #17302f, var(--bg-raised) 70%);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 22px 18px 18px;
-    margin-bottom: 22px;
-    text-align: center;
-  }
-  .radar-label{ font-size: 13px; color: var(--text-dim); margin-bottom: 4px;}
-  .radar-name{ font-family:'Fraunces', serif; font-size: 19px; margin-bottom: 14px; min-height: 24px;}
-  .radar-svg{ display:block; margin: 0 auto; }
-  .ring-static{ fill:none; stroke: var(--line); stroke-width:1; }
-  .ring-fill{ fill:none; stroke: var(--coral); stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease, stroke 0.4s ease; }
-  .ring-fill.inside{ stroke: var(--teal); }
-  .radar-dot{ fill: var(--coral); }
-  .radar-dot.inside{ fill: var(--teal); }
-  .pulse{ fill:none; stroke: var(--teal); stroke-width: 1.5; opacity:0; }
-  .pulse.animate{ animation: pulseOut 2.4s ease-out infinite; }
-  @keyframes pulseOut{
-    0%{ r: 34; opacity: 0.55; }
-    100%{ r: 92; opacity: 0; }
-  }
-  .radar-meta{ display:flex; justify-content: center; gap: 22px; margin-top: 10px; font-size: 12px; color: var(--text-dim); }
-  .radar-meta b{ color: var(--text); font-weight: 500; }
-  .status-pill{
-    display:inline-flex; align-items:center; gap:6px;
-    font-size: 12px; padding: 5px 12px; border-radius: 999px;
-    background: var(--bg-card); border: 1px solid var(--line);
-    color: var(--text-dim);
-  }
-  .status-pill .dot{ width:6px; height:6px; border-radius:50%; background: var(--text-faint); }
-  .status-pill.on{ color: var(--teal); border-color: rgba(79,184,168,0.4); }
-  .status-pill.on .dot{ background: var(--teal); box-shadow: 0 0 6px var(--teal); }
-
-  /* ---- Install banner ---- */
-  .install-btn{
-    flex:0 0 auto; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--teal);
-    background: rgba(79,184,168,0.12); color: var(--text); font-size: 13px; font-family: inherit; cursor:pointer;
-  }
-
-  /* ---- Position control ---- */
-  section{ margin-bottom: 22px; }
-  .section-title{ font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #ffffff; margin-bottom: 10px; }
-  .panel{ background: var(--bg-card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
-  .toggle-row{ display:flex; gap:8px; margin-bottom: 12px; }
-  .toggle-btn{
-    flex:1; padding: 9px; border-radius: 10px; border: 1px solid var(--line);
-    background: transparent; color: var(--text-dim); font-size: 13px; font-family: inherit; cursor:pointer;
-  }
-  .toggle-btn.active{ background: var(--coral-dim); border-color: var(--coral); color: var(--text); }
-  .coord-row{ display:flex; gap:8px; margin-bottom: 10px; }
-  .coord-row input{
-    flex:1; background: var(--bg-raised); border: 1px solid var(--line); border-radius: 8px;
-    padding: 9px 10px; color: var(--text); font-family:'IBM Plex Mono', monospace; font-size: 13px;
-  }
-  .nudge-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 4px;}
-  .nudge-btn{
-    padding: 8px 4px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg-raised);
-    color: var(--text-dim); font-size: 12px; cursor:pointer; font-family: inherit;
-  }
-  .nudge-btn:active{ background: var(--coral-dim); color: var(--text); }
-  .gps-msg{ font-size: 12px; color: var(--text-faint); margin-top: 8px; line-height: 1.5; }
-
-  .jump-grid{ display:flex; flex-direction:column; gap:8px; }
-  .jump-row{ display:flex; align-items:center; gap:8px; }
-  .jump-row .jname{ flex:1; font-size: 13px; color: var(--text); }
-  .jump-row button{
-    font-family:'IBM Plex Mono', monospace; font-size: 11px; padding: 7px 10px;
-    border-radius: 8px; border: 1px solid var(--line); background: var(--bg-raised);
-    color: var(--text-dim); cursor:pointer; white-space:nowrap;
-  }
-  .jump-row button:active{ background: var(--coral-dim); color: var(--text); }
-  .jump-row .pts{ display:flex; gap:6px; flex-wrap:wrap; margin-top: 4px; }
-  .jump-row .pts button{ font-size: 10px; padding: 5px 8px; }
-
-  /* ---- Zone cards ---- */
-  .zone-card{
-    background: var(--bg-card); border: 1px solid var(--line); border-radius: 16px;
-    padding: 16px; margin-bottom: 12px;
-  }
-  .zone-top{ display:flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-  .zone-name{ font-family:'Fraunces', serif; font-size: 17px; }
-  .zone-dist{ font-size: 12px; color: var(--text-dim); margin-top: 2px; }
-  .badge{ font-size: 11px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--text-faint); white-space: nowrap;}
-  .badge.inside{ color: var(--teal); border-color: rgba(79,184,168,0.4); background: rgba(79,184,168,0.08); }
-  .bar{ height: 5px; border-radius: 3px; background: var(--bg-raised); overflow:hidden; margin: 10px 0 12px; }
-  .bar-fill{ height:100%; background: var(--coral); transition: width 0.5s ease; }
-  .bar-fill.inside{ background: var(--teal); }
-  .inner-points{ display:flex; flex-wrap:wrap; gap: 8px; }
-  .inner-pt{
-    display:flex; align-items:center; gap:6px;
-    font-size: 12px; padding: 6px 10px; border-radius: 10px;
-    background: var(--bg-raised); border: 1px solid var(--line); color: var(--text-dim); cursor:pointer;
-  }
-  .inner-pt .idot{ width:6px; height:6px; border-radius:50%; background: var(--text-faint); }
-  .inner-pt.triggered{ border-color: var(--coral); color: var(--text); }
-  .inner-pt.triggered .idot{ background: var(--coral); box-shadow: 0 0 5px var(--coral); }
-
-  /* ---- Log ---- */
-  .log{
-    background: var(--bg-card); border: 1px solid var(--line); border-radius: 16px;
-    padding: 14px 16px; max-height: 160px; overflow-y:auto;
-  }
-  .log-entry{ font-family:'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--text-dim); padding: 4px 0; border-bottom: 1px dashed var(--line); }
-  .log-entry:last-child{ border-bottom:none; }
-  .log-entry .t{ color: var(--text-faint); margin-right: 8px; }
-  .log-entry.audio{ color: var(--teal); }
-  .log-entry.ar{ color: var(--coral); }
-
-  /* ---- AR modal ---- */
-  .ar-overlay{
-    position: fixed; inset:0; background: #000; display:none; align-items:center; justify-content:center;
-    flex-direction: column; z-index: 50;
-  }
-  .ar-overlay.open{ display:flex; }
-  .ar-overlay video{ position:absolute; inset:0; width:100%; height:100%; object-fit: cover; opacity: 0.9; }
-  .ar-fallback{ position:absolute; inset:0; background: linear-gradient(160deg,#12302e,#0a1717); }
-
-  .rotate-prompt{
-    position:relative; z-index:2; display:none; flex-direction:column; align-items:center; gap:16px;
-    color:#fff; text-align:center; padding:0 32px;
-  }
-  .rotate-prompt svg{ width:52px; height:52px; animation: rotateHint 1.6s ease-in-out infinite; opacity:0.9; }
-  @keyframes rotateHint{ 0%,100%{ transform:rotate(0deg);} 50%{ transform:rotate(90deg);} }
-  .rotate-prompt p{ font-size:14px; color:rgba(255,255,255,0.88); line-height:1.5; }
-  .rotate-prompt .pt-name{ font-family:'Fraunces', serif; font-size:18px; color:#fff; }
-  .ar-overlay:not(.is-landscape) .rotate-prompt{ display:flex; }
-
-  .ar-frame{
-    position:relative; z-index:2; width:100%; height:100%;
-    display:none; flex-direction:column; align-items:center; justify-content:center;
-    padding: 3vh 3vw;
-  }
-  .ar-overlay.is-landscape .ar-frame{ display:flex; }
-  .ar-image{
-    width:100%; max-height:78vh; aspect-ratio: 16/9;
-    border-radius: 10px; border: 1px solid rgba(255,255,255,0.25);
-    background: linear-gradient(160deg, rgba(226,137,90,0.35), rgba(79,184,168,0.25)), var(--bg-raised);
-    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  }
-  .ar-image svg{ width:44px; height:44px; opacity:0.85; }
-  .ar-image span{ font-family:'IBM Plex Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.7); }
-  .ar-caption{ position: relative; z-index:2; margin-top: 14px; text-align:center; color:#fff; }
-  .ar-caption h3{ font-size: 15px; }
-  .ar-caption p{ font-size: 11px; color: rgba(255,255,255,0.6); margin-top:3px; }
-  .ar-close{
-    position: absolute; top: 20px; right: 20px; z-index: 5;
-    width: 38px; height: 38px; border-radius: 50%;
-    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
-    color: #fff; font-size: 16px; cursor:pointer;
-  }
-  .ar-status{ position:absolute; top:20px; left:20px; z-index:5; font-family:'IBM Plex Mono',monospace; font-size:10px; color: rgba(255,255,255,0.5); }
-
-  /* ---- AR point selection gallery ---- */
-  .gallery-overlay{
-    position: fixed; inset:0; background: rgba(6,14,15,0.92); display:none; align-items:center; justify-content:center;
-    z-index: 55; padding: 24px;
-  }
-  .gallery-overlay.open{ display:flex; }
-  .gallery-panel{
-    width:100%; max-width: 420px; background: var(--bg-card); border: 1px solid var(--line);
-    border-radius: 18px; padding: 20px; max-height: 80vh; overflow-y:auto;
-  }
-  .gallery-title{ font-family:'Fraunces', serif; font-size: 18px; margin-bottom: 4px; }
-  .gallery-sub{ font-size: 12px; color: var(--text-dim); margin-bottom: 16px; }
-  .gallery-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .gallery-item{
-    display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;
-    background: var(--bg-raised); border: 1px solid var(--line); border-radius: 14px;
-    padding: 16px 10px; color: var(--text); cursor:pointer; font-family: inherit;
-  }
-  .gallery-item:active{ border-color: var(--coral); background: var(--coral-dim); }
-  .gallery-item svg{ width:28px; height:28px; opacity:0.85; }
-  .gallery-item .gname{ font-size: 13px; }
-  .gallery-item .gzone{ font-size: 11px; color: var(--text-faint); }
-  .gallery-close{
-    display:block; margin: 16px auto 0; padding: 9px 16px; border-radius: 10px;
-    border: 1px solid var(--line); background: transparent; color: var(--text-dim); font-family: inherit; cursor:pointer;
-  }
+:root{
+  --bg:#0d1b1c; --bg-raised:#142627; --bg-card:#16292a; --line:#22393a;
+  --coral:#e2895a; --coral-dim:#7a4f39; --teal:#4fb8a8;
+  --text:#eef2ee; --text-dim:#96a6a3; --text-faint:#5f7371; --danger:#d16158;
+  --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-text-size-adjust:100%}
+body{background:var(--bg) url('images/background.png') center/cover fixed no-repeat;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:rgba(13,27,28,.82);z-index:-1}
+.screen{display:none;min-height:100%;padding:max(20px,env(safe-area-inset-top)) 20px max(28px,env(safe-area-inset-bottom));max-width:560px;margin:0 auto;flex-direction:column}
+.screen.on{display:flex}
+h1,h2,h3{font-family:var(--serif);font-weight:600;margin:0}
+h1{font-size:2rem;line-height:1.15} h2{font-size:1.5rem;line-height:1.2} h3{font-size:1.1rem}
+p{line-height:1.55;color:var(--text-dim);margin:.4em 0}
+.mono{font-family:var(--mono);font-size:.78rem;color:var(--text-faint);letter-spacing:.04em}
+.logo{width:84px;height:84px;object-fit:contain;margin:6vh auto 18px;display:block}
+.center{text-align:center}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px 18px;border-radius:14px;border:1px solid var(--line);background:var(--bg-card);color:var(--text);font:600 1rem var(--sans);cursor:pointer;text-align:center}
+.btn.primary{background:var(--coral);border-color:var(--coral);color:#1a0f08}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45}
+.btn+.btn{margin-top:10px}
+.card{background:var(--bg-card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:12px;display:block;width:100%;text-align:left;color:var(--text);font-family:var(--sans)}
+button.card{cursor:pointer}
+.card.soon{opacity:.5}
+.card .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.tag{font:500 .7rem var(--mono);padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--text-dim);white-space:nowrap}
+.tag.live{border-color:var(--teal);color:var(--teal)}
+.tag.near{border-color:var(--coral);color:var(--coral)}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.back{background:none;border:0;color:var(--text-dim);font:500 .95rem var(--sans);padding:8px 4px;cursor:pointer}
+.spacer{flex:1}
+.player{background:var(--bg-raised);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:14px}
+.bar{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin:12px 0 6px}
+.bar>i{display:block;height:100%;width:0;background:var(--coral)}
+.ctl{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:10px}
+.ctl .btn{width:auto;padding:12px 16px}
+.pic{width:100%;border-radius:14px;margin-top:12px;display:block;border:1px solid var(--line)}
+.banner{background:var(--bg-raised);border:1px solid var(--coral-dim);color:var(--text);border-radius:12px;padding:12px 14px;margin:10px 0;font-size:.9rem;line-height:1.45}
+.banner.err{border-color:var(--danger)}
+.notice{font-size:.78rem;color:var(--text-faint);margin-top:18px;line-height:1.5}
+.dev{margin-top:20px;border-top:1px dashed var(--line);padding-top:12px}
+.dev summary{font:500 .78rem var(--mono);color:var(--text-faint);cursor:pointer}
+.dev label{display:block;font-size:.85rem;color:var(--text-dim);margin:10px 0}
+.dev select,.dev input{width:100%;margin-top:4px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg-raised);color:var(--text);font:inherit}
+/* full-screen overlays */
+.full{position:fixed;inset:0;background:#000;z-index:50;display:none}
+.full.on{display:block}
+.full video,.full canvas,.full .ovimg{position:absolute;inset:0;width:100%;height:100%}
+.full video{object-fit:cover}
+.full .ovimg{object-fit:cover;opacity:.5}
+.full canvas{touch-action:none}
+.fbar{position:absolute;left:0;right:0;bottom:0;padding:14px 18px max(18px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.75));z-index:2}
+.fbar input[type=range]{width:100%;accent-color:#e2895a}
+.fclose{position:absolute;top:max(14px,env(safe-area-inset-top));right:14px;z-index:3;background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:10px 16px;font:600 .9rem var(--sans);cursor:pointer}
+.fhint{position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;right:100px;z-index:3;color:#fff;font-size:.85rem;text-shadow:0 1px 3px #000}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--bg-raised);border:1px solid var(--line);padding:10px 16px;border-radius:99px;font-size:.85rem;z-index:99;display:none;max-width:90%}
 </style>
 </head>
 <body>
 
-<header>
-  <img class="brand-logo" src="images/logo-mark.png" alt="Sankofa" />
-  <div>
-    <div class="eyebrow">Waypoint · Barbados Trail</div>
-    <h1>Geofence Audio Guide</h1>
-    <p>Ambient narration triggers by outer zone. AR photo points fire independently inside each zone.</p>
+<!-- 1. WELCOME / CHOOSE A TRAIL -->
+<section class="screen on" id="s-welcome">
+  <img class="logo" src="images/logo-mark.png" alt="" onerror="this.style.display='none'">
+  <div class="center">
+    <h1>Sankofa Trails</h1>
+    <p>Audio stories and AR points along the trails of Barbados.</p>
   </div>
-</header>
-
-<div class="panel" id="gpsBanner" style="margin-bottom:18px; border-color: var(--coral);">
-  <div style="display:flex; align-items:center; gap:10px; justify-content:space-between;">
-    <div>
-      <div style="font-size:13px; font-weight:600;" id="gpsBannerTitle">Requesting device location…</div>
-      <div class="gps-msg" id="gpsBannerMsg" style="margin-top:4px;">Allow location access when prompted.</div>
-    </div>
-    <button class="nudge-btn" onclick="requestGPS()" style="flex:0 0 auto;">Retry</button>
-  </div>
-</div>
-
-<div class="panel" id="installBanner" style="display:none; margin-bottom:18px; border-color: var(--teal);">
-  <div style="display:flex; align-items:center; gap:10px; justify-content:space-between;">
-    <div>
-      <div style="font-size:13px; font-weight:600;" id="installBannerTitle">Install this app</div>
-      <div class="gps-msg" id="installBannerMsg" style="margin-top:4px;">Install Sankofa Trails for quick, full-screen access on your trail walk.</div>
-    </div>
-    <button class="install-btn" id="installBtn" onclick="doInstall()">Install App</button>
-  </div>
-</div>
-
-<div class="radar-wrap">
-  <div class="radar-label">Nearest zone</div>
-  <div class="radar-name mono" id="radarName">—</div>
-  <svg class="radar-svg" width="220" height="160" viewBox="0 0 220 160">
-    <circle class="pulse" id="pulse1" cx="110" cy="90" r="34"></circle>
-    <circle class="pulse" id="pulse2" cx="110" cy="90" r="34" style="animation-delay:0.9s"></circle>
-    <circle class="ring-static" cx="110" cy="90" r="70"></circle>
-    <circle class="ring-fill" id="ringFill" cx="110" cy="90" r="70"
-      stroke-dasharray="439.8" stroke-dashoffset="439.8"
-      transform="rotate(-90 110 90)"></circle>
-    <circle class="radar-dot" id="radarDot" cx="110" cy="90" r="7"></circle>
-  </svg>
-  <div class="radar-meta">
-    <div>Distance <b id="metaDist">—</b></div>
-    <div>Zone radius <b id="metaRadius">—</b></div>
-  </div>
-  <div style="margin-top:12px;">
-    <span class="status-pill" id="audioPill"><span class="dot"></span><span id="audioPillText">Audio idle</span></span>
-  </div>
-</div>
-
-<section>
-  <div class="section-title">Position source</div>
-  <div class="panel">
-    <div class="toggle-row">
-      <button class="toggle-btn" id="btnManual" onclick="setMode('manual')">Simulate position</button>
-      <button class="toggle-btn active" id="btnGPS" onclick="setMode('gps')">Use device GPS</button>
-    </div>
-    <div class="gps-msg" id="gpsMsg">Using live device GPS.</div>
-  </div>
+  <p class="mono center" style="margin-top:26px">CHOOSE YOUR TRAIL</p>
+  <div id="placeList"></div>
+  <p class="notice">Use headphones if you can, keep your volume up, and stay aware of traffic and uneven ground as you walk. Tap a trail to begin; you will be asked to allow location access so the app knows when you reach each point.</p>
+  <details class="dev" id="dev">
+    <summary>Desk testing</summary>
+    <label><input type="checkbox" id="simOn" style="width:auto"> Simulate location (no GPS)</label>
+    <div class="mono" id="devLog" style="white-space:pre-wrap;margin-top:8px"></div>
+  </details>
 </section>
 
-<details style="margin-bottom:22px;">
-  <summary style="cursor:pointer; font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color: #ffffff; padding:4px 0;">Desk testing tools (simulate position)</summary>
-  <div class="panel" style="margin-top:10px;">
-    <div class="coord-row">
-      <input type="text" id="latInput" value="13.120074" class="mono" disabled />
-      <input type="text" id="lonInput" value="-59.568913" class="mono" disabled />
-      <button class="nudge-btn" onclick="applyManual()" style="flex:0 0 64px;">Set</button>
+<!-- 2. INTRO (general intro, then place intro) -->
+<section class="screen" id="s-intro">
+  <div class="top"><button class="back" data-go="welcome">&larr; Trails</button></div>
+  <h2 id="introTitle"></h2>
+  <p class="mono" id="introStep"></p>
+  <div class="player">
+    <div class="mono" id="introNow">Starting&hellip;</div>
+    <div class="bar"><i id="introBar"></i></div>
+    <div class="ctl">
+      <button class="btn ghost" id="introPlay">Pause</button>
+      <button class="btn ghost" id="introSkip">Skip</button>
     </div>
-    <div class="nudge-grid">
-      <button class="nudge-btn" onclick="nudge(1,0)">N ↑</button>
-      <button class="nudge-btn" onclick="nudge(-1,0)">S ↓</button>
-      <button class="nudge-btn" onclick="nudge(0,1)">E →</button>
-      <button class="nudge-btn" onclick="nudge(0,-1)">W ←</button>
-    </div>
-    <div class="gps-msg">Switches out of GPS mode automatically. Use this only for desk testing — not for real field use.</div>
   </div>
-  <div class="panel" style="margin-top:10px;">
-    <div class="jump-grid" id="jumpGrid"></div>
-    <div class="gps-msg">Jumps you to dead center of a zone (audio triggers instantly) or just outside it (~25m past the edge, so you can nudge in and watch the trigger fire).</div>
-  </div>
-</details>
-
-<section>
-  <div class="section-title">Locations</div>
-  <div id="zoneList"></div>
+  <div id="introMsg"></div>
+  <button class="btn primary" id="introGo" style="margin-top:16px">Continue</button>
 </section>
 
-<section>
-  <div class="section-title">Event log</div>
-  <div class="log" id="log"></div>
+<!-- 3. OPTIONS -->
+<section class="screen" id="s-options">
+  <div class="top"><button class="back" data-go="welcome">&larr; Trails</button></div>
+  <h2 id="optTitle"></h2>
+  <p id="optSub"></p>
+  <button class="card" id="optStory"><h3>Listen to the story</h3><p>One continuous audio story to enjoy as you walk. <span id="optCredit"></span></p></button>
+  <button class="card" id="optAR"><h3>Find the points</h3><p>Walk the trail. When you reach a point, its photos, then-and-now views and 360&deg; scenes unlock.</p></button>
+  <button class="card" id="optMap" style="display:none"><h3>See the map</h3><p>A general idea of where the points are.</p></button>
+  <p class="notice" id="optFiction"></p>
 </section>
 
-<div class="ar-overlay" id="arOverlay">
-  <video id="arVideo" autoplay playsinline muted></video>
-  <div class="ar-fallback" id="arFallback" style="display:none;"></div>
-  <div class="ar-status" id="arStatus">CAMERA: —</div>
-  <button class="ar-close" onclick="closeAR()">✕</button>
-
-  <div class="rotate-prompt" id="rotatePrompt">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.4">
-      <rect x="5" y="2" width="14" height="20" rx="2"></rect>
-      <line x1="12" y1="18" x2="12" y2="18.01"></line>
-    </svg>
-    <div class="pt-name" id="rotatePtName">Front Door</div>
-    <p>Turn your phone sideways to view this overlay</p>
-  </div>
-
-  <div class="ar-frame" id="arFrame">
-    <div class="ar-image">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.3"><path d="M3 7h3l2-2h8l2 2h3v13H3z"/><circle cx="12" cy="13" r="4"/></svg>
-      <span id="arImageName">front_door_1920.jpg</span>
-    </div>
-    <div class="ar-caption">
-      <h3 id="arCaptionTitle">Front Door</h3>
-      <p id="arCaptionSub">AR overlay · placeholder image</p>
+<!-- 4. STORY -->
+<section class="screen" id="s-story">
+  <div class="top"><button class="back" data-go="options">&larr; Back</button></div>
+  <h2 id="storyTitle"></h2>
+  <p id="storyCredit"></p>
+  <div class="player">
+    <div class="mono" id="storyTime">0:00</div>
+    <div class="bar"><i id="storyBar"></i></div>
+    <div class="ctl">
+      <button class="btn ghost" id="storyBack">&minus;15s</button>
+      <button class="btn primary" id="storyPlay">Play</button>
+      <button class="btn ghost" id="storyFwd">+15s</button>
     </div>
   </div>
+  <div id="storyMsg"></div>
+  <p class="notice">Audio plays while this page is open. If you lock your screen, your phone may pause it &mdash; keep the screen on for the best experience.</p>
+</section>
+
+<!-- 5. POINTS (geofenced) -->
+<section class="screen" id="s-points">
+  <div class="top"><button class="back" data-go="options">&larr; Back</button></div>
+  <h2 id="ptsTitle"></h2>
+  <div id="ptsStatus"></div>
+  <div id="ptsList"></div>
+  <p class="notice">GPS can be off by 5&ndash;15 metres. If a point does not unlock, move a few steps and wait a few seconds. Points unlock when you are close; you can also open any point you have already visited.</p>
+</section>
+
+<!-- 6. ONE POINT -->
+<section class="screen" id="s-point">
+  <div class="top"><button class="back" data-go="points">&larr; Points</button></div>
+  <h2 id="ptTitle"></h2>
+  <p id="ptHint"></p>
+  <div class="player" id="ptAudioBox" style="display:none">
+    <div class="mono">POINT AUDIO</div>
+    <div class="bar"><i id="ptBar"></i></div>
+    <div class="ctl"><button class="btn ghost" id="ptPlay">Play</button></div>
+  </div>
+  <div id="ptPics"></div>
+  <div id="ptActions" style="margin-top:14px"></div>
+</section>
+
+<!-- Full-screen: camera overlay -->
+<div class="full" id="camView">
+  <video id="camVid" playsinline muted autoplay></video>
+  <img class="ovimg" id="camOv" alt="">
+  <div class="fhint" id="camHint">Line the picture up with the view in front of you.</div>
+  <button class="fclose" id="camClose">Close</button>
+  <div class="fbar"><div class="mono" style="color:#ddd">THEN &larr; &rarr; NOW</div><input type="range" id="camOpacity" min="0" max="100" value="50"></div>
 </div>
 
-<div class="gallery-overlay" id="galleryOverlay">
-  <div class="gallery-panel">
-    <div class="gallery-title">Multiple points nearby</div>
-    <div class="gallery-sub">You're in range of more than one AR point — pick which one to view.</div>
-    <div class="gallery-grid" id="galleryGrid"></div>
-    <button class="gallery-close" onclick="hideGallery()">Close</button>
-  </div>
+<!-- Full-screen: 360 viewer -->
+<div class="full" id="panView">
+  <canvas id="panCanvas"></canvas>
+  <div class="fhint" id="panHint">Move your phone around, or drag to look.</div>
+  <button class="fclose" id="panClose">Close</button>
 </div>
+
+<div id="simBar" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg-raised);border-top:1px solid var(--coral-dim);padding:8px 14px">
+  <label class="mono" style="display:block">SIMULATED POSITION <select id="simPoint" style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text)"></select></label>
+</div>
+<div id="toast"></div>
 
 <script>
-/* ---------------- DATA ---------------- */
-const LOCATIONS = [
-  {
-    id: 'salters',
-    name: 'Salters, St. George',
-    center: { lat: 13.120526, lon: -59.565983 },
-    radius: 342,
-    audioFile: 'audio/salters.mp3',
-    innerPoints: [
-      { id:'salters-1', lat:13.120856, lon:-59.563980, radius:8, mode:'ar_overlay', image:'front_door_1920.jpg', label:'Front Door' }
-    ]
-  },
-  {
-    id: 'constitution',
-    name: 'Constitution River',
-    center: { lat: 13.097276, lon: -59.608973 },
-    radius: 213,
-    audioFile: 'audio/bridgetown.mp3',
-    innerPoints: [
-      { id:'constitution-1', lat:13.097286, lon:-59.608105, radius:8, mode:'ar_overlay', image:'front_door_1920.jpg', label:'River Bend' },
-      { id:'constitution-2', lat:13.097100, lon:-59.610710, radius:8, mode:'ar_overlay', image:'front_door_1920.jpg', label:'Upstream Marker' },
-      { id:'constitution-3', lat:13.097413, lon:-59.607777, radius:8, mode:'ar_overlay', image:'front_door_1920.jpg', label:'Old Bridge' }
-    ]
-  },
-  {
-    id: 'joesriver',
-    name: "Joe's River",
-    center: { lat: 13.214128, lon: -59.526361 },
-    radius: 241,
-    audioFile: 'audio/joesriver.mp3',
-    innerPoints: [
-      { id:'joesriver-1', lat:13.213420, lon:-59.524455, radius:8, mode:'ar_overlay', image:'front_door_1920.jpg', label:'Forest Marker' }
-    ]
-  },
-  {
-    id: 'tentbay',
-    name: 'Tent Bay',
-    center: { lat: 13.211619, lon: -59.518437 },
-    radius: 482,
-    audioFile: 'audio/tentbay.mp3',
-    innerPoints: [
-      { id:'tentbay-1', lat:13.212221, lon:-59.522656, radius:8, mode:'ar_overlay', image:'front_door_1920.jpg', label:'Bay Lookout' }
-    ]
-  }
+/* ============================================================
+   DATA
+   ============================================================ */
+const GENERAL_INTRO = 'places/general-intro.mp3';
+const PLACES = [
+  { id:'riverroad', name:'River Road', alt:'Constitution River',
+    center:{lat:13.097060, lon:-59.608986}, radius:208, pointRadius:12,
+    credit:'Story by Karen Lord ©2026', fiction:true,
+    points:[
+      {n:1,title:'Point 1',lat:13.097158,lon:-59.607273},
+      {n:2,title:'Point 2',lat:13.097232,lon:-59.607662},
+      {n:3,title:'Point 3',lat:13.096656,lon:-59.608353},
+      {n:4,title:'Point 4',lat:13.097114,lon:-59.610722,options:['a','b'],overlay:true,hint:'Stand on the bridge and face west.'},
+      {n:5,title:'Point 5',lat:13.097006,lon:-59.607250}
+    ]},
+  { id:'salters', name:'Salters',
+    center:{lat:13.120316, lon:-59.565813}, radius:361, pointRadius:12,
+    points:[
+      {n:1,title:'Point 1',lat:13.119968,lon:-59.568932},
+      {n:2,title:'Point 2',lat:13.120894,lon:-59.565876},
+      {n:3,title:'Point 3',lat:13.120466,lon:-59.563278,panorama:true},
+      {n:4,title:'Point 4',lat:13.120664,lon:-59.562695}
+    ]},
+  { id:'tentbay', name:'Tent Bay', soon:true },
+  { id:'joesriver', name:"Joe's River", soon:true }
 ];
-
-/* ---------------- STATE ---------------- */
-let mode = 'gps';
-let pos = { lat: 13.120074, lon: -59.568913 }; // fallback until real GPS reports in
-let watchId = null;
-let insideZones = new Set();
-let triggeredPoints = new Set();
-
-// GPS readings past this accuracy (meters) are ignored outright — a cold-start
-// fix can be off by hundreds of meters and shouldn't move the dot at all.
 const GPS_ACCURACY_THRESHOLD_M = 50;
-// A candidate zone/point entry or exit only takes effect once this many
-// consecutive GPS readings agree, so a single noisy fix can't fire a trigger.
-// Manual/simulate mode has no accuracy figure to filter on, so it always
-// commits instantly and skips this confirmation step entirely.
 const CONFIRM_READINGS_REQUIRED = 3;
-const pendingZoneState = {};  // loc.id -> { state, count }
-const pendingPointState = {}; // point.id -> { state, count }
 
-function confirmTransition(store, id, candidateState){
-  const pending = store[id];
-  if(pending && pending.state === candidateState){
-    pending.count++;
-  } else {
-    store[id] = { state: candidateState, count: 1 };
-  }
-  if(store[id].count >= CONFIRM_READINGS_REQUIRED){
-    delete store[id];
-    return true;
-  }
-  return false;
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const log = (...a)=>{ try{ console.log('[sankofa]',...a); const d=$('devLog'); d.textContent=(new Date().toLocaleTimeString()+' '+a.join(' ')+'\n'+d.textContent).slice(0,900);}catch(e){} };
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toast._t); toast._t=setTimeout(()=>t.style.display='none',3200); }
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371000, r=Math.PI/180, dLat=(lat2-lat1)*r, dLon=(lon2-lon1)*r;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
 }
-
-/* ---------------- GEO MATH ---------------- */
-function haversine(lat1, lon1, lat2, lon2){
-  const R = 6371000;
-  const toRad = d => d * Math.PI/180;
-  const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
-  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-function fmtM(m){ return m < 1000 ? Math.round(m)+'m' : (m/1000).toFixed(2)+'km'; }
-
-/* ---------------- AUDIO ENGINE ---------------- */
-// One <audio> element per zone, pre-created so the first geofence trigger
-// can just call .play() instead of constructing/loading on the fly.
-const AUDIO_ELS = {}; // location id -> HTMLAudioElement
-function initAudioElements(){
-  LOCATIONS.forEach(loc => {
-    if(!loc.audioFile) return;
-    const a = new Audio(loc.audioFile);
-    a.loop = true;
-    a.preload = 'auto';
-    a.volume = 0;
-    AUDIO_ELS[loc.id] = a;
-  });
-  // Mobile browsers block audio.play() until a user gesture. Geofence
-  // triggers fire from watchPosition, not a click, so prime every element
-  // on the first tap/click anywhere in the app to unlock playback for later.
-  const unlock = () => {
-    Object.values(AUDIO_ELS).forEach(a => {
-      a.play().then(() => a.pause()).catch(() => {});
-    });
+function fmt(s){ if(!isFinite(s)) return '0:00'; s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+const base = p => 'places/'+p.id+'/';
+function pointAssets(p,pt){
+  const b=base(p), k='point-'+pt.n;
+  return {
+    audio:b+'audio/'+k+'.mp3',
+    photos:(pt.options||[]).map(o=>b+'photos/'+k+o+'.jpg').concat(pt.options?[]:[b+'photos/'+k+'.jpg']),
+    overlay:b+'overlays/'+k+'.jpg',
+    pano:b+'panoramas/'+k+'.jpg'
   };
-  window.addEventListener('touchend', unlock, { once: true });
-  window.addEventListener('click', unlock, { once: true });
 }
 
-const AudioEngine = (() => {
-  const active = new Set();
-  const FADE_MS = 1200;
-  const FADE_STEPS = 24;
-  function fade(audio, from, to, onDone){
-    clearInterval(audio._fadeTimer);
-    audio.volume = from;
-    let i = 0;
-    audio._fadeTimer = setInterval(() => {
-      i++;
-      audio.volume = Math.max(0, Math.min(1, from + (to - from) * (i / FADE_STEPS)));
-      if(i >= FADE_STEPS){
-        clearInterval(audio._fadeTimer);
-        audio.volume = to;
-        if(onDone) onDone();
-      }
-    }, FADE_MS / FADE_STEPS);
-  }
-  function start(id){
-    const audio = AUDIO_ELS[id];
-    if(!audio || active.has(id)) return;
-    active.add(id);
-    audio.currentTime = 0;
-    audio.play().catch(err => console.warn('Audio blocked — needs a user tap first:', err));
-    fade(audio, 0, 1);
-  }
-  function stop(id){
-    const audio = AUDIO_ELS[id];
-    if(!audio || !active.has(id)) return;
-    active.delete(id);
-    fade(audio, audio.volume, 0, () => audio.pause());
-  }
-  function anyPlaying(){ return active.size > 0; }
-  return { start, stop, anyPlaying };
-})();
+/* ============================================================
+   SCREENS
+   ============================================================ */
+let current='welcome', place=null;
+function go(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  $('s-'+name).classList.add('on'); current=name; window.scrollTo(0,0);
+  if(name!=='points') stopGPS();
+  if(name!=='story') storyAudio.pause();
+  if(name!=='intro') introStop();
+  if(name!=='point') ptAudio.pause();
+  $('simBar').style.display=(sim()&&(name==='points'))?'block':'none';
+  if(name==='points') startGPS();
+}
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(b) go(b.dataset.go); });
 
-/* ---------------- LOGGING ---------------- */
-function log(msg, cls){
-  const el = document.getElementById('log');
-  const time = new Date().toLocaleTimeString();
-  const div = document.createElement('div');
-  div.className = 'log-entry' + (cls ? ' '+cls : '');
-  div.innerHTML = `<span class="t">${time}</span>${msg}`;
-  el.prepend(div);
+/* ============================================================
+   AUDIO (one element per job; first tap unlocks them)
+   ============================================================ */
+const SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+const introAudio=new Audio(), storyAudio=new Audio(), ptAudio=new Audio();
+[introAudio,storyAudio,ptAudio].forEach(a=>{a.preload='none';a.playsInline=true;});
+let unlocked=false;
+function unlockAudio(){
+  if(unlocked) return; unlocked=true;
+  [introAudio,storyAudio,ptAudio].forEach(a=>{ const old=a.src; a.src=SILENT; a.play().then(()=>a.pause()).catch(()=>{}); a.removeAttribute('src'); });
+}
+function audioFail(a,label,msgEl){
+  a.onerror=()=>{ log('AUDIO FAILED',label,a.currentSrc||a.src,(a.error&&a.error.code)||''); if(msgEl) msgEl.innerHTML='<div class="banner err">This audio could not be loaded. Check your signal and try again.</div>'; };
 }
 
-/* ---------------- MODE / POSITION CONTROL ---------------- */
-function setBanner(title, msg, ok){
-  document.getElementById('gpsBannerTitle').textContent = title;
-  document.getElementById('gpsBannerMsg').textContent = msg;
-  document.getElementById('gpsBanner').style.borderColor = ok ? 'var(--teal)' : 'var(--coral)';
-  document.getElementById('gpsBanner').style.display = ok ? 'none' : 'block';
-}
-function setMode(m){
-  mode = m;
-  // A fresh sequence of readings should start its own confirmation count,
-  // not inherit a partial count left over from the other source.
-  Object.keys(pendingZoneState).forEach(k => delete pendingZoneState[k]);
-  Object.keys(pendingPointState).forEach(k => delete pendingPointState[k]);
-  document.getElementById('btnManual').classList.toggle('active', m==='manual');
-  document.getElementById('btnGPS').classList.toggle('active', m==='gps');
-  const inputs = document.querySelectorAll('.coord-row input, .nudge-grid button');
-  inputs.forEach(i => i.disabled = (m==='gps'));
-  if(m==='gps'){
-    document.getElementById('gpsMsg').textContent = 'Using live device GPS.';
-    requestGPS();
-  } else {
-    if(watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
-    document.getElementById('gpsMsg').textContent = 'Manual mode — nudge ~10m per tap to walk toward a zone boundary and test triggers without leaving your desk.';
-    document.getElementById('gpsBanner').style.display = 'none';
-  }
-}
-function requestGPS(){
-  if(mode !== 'gps') setMode('gps');
-  if(watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
-
-  if(!window.isSecureContext){
-    setBanner(
-      'GPS blocked — page not secure (HTTPS)',
-      'Browsers only allow location access on https:// pages. If you opened this file directly from Downloads, it won\'t work — open it via the published web link instead, or host the file online.',
-      false
-    );
-    return;
-  }
-  if(!navigator.geolocation){
-    setBanner('Geolocation not supported', 'This browser doesn\'t support location access at all. Try Chrome or Safari.', false);
-    return;
-  }
-
-  setBanner('Requesting device location…', 'Allow location access when your browser prompts you.', false);
-
-  watchId = navigator.geolocation.watchPosition(p => {
-    const accuracy = p.coords.accuracy;
-    if(accuracy > GPS_ACCURACY_THRESHOLD_M){
-      // Reading is too imprecise to trust at all (common on a cold GPS fix) —
-      // ignore it completely rather than moving the dot or evaluating zones.
-      setBanner('', '', true);
-      document.getElementById('gpsMsg').textContent = `Live GPS · accuracy ±${Math.round(accuracy)}m — too low, waiting for a better fix (need ≤${GPS_ACCURACY_THRESHOLD_M}m)`;
-      return;
-    }
-    pos = { lat: p.coords.latitude, lon: p.coords.longitude };
-    setBanner('', '', true); // hides banner once we have a real fix
-    document.getElementById('gpsMsg').textContent = `Live GPS · accuracy ±${Math.round(accuracy)}m`;
-    document.getElementById('latInput').value = pos.lat.toFixed(6);
-    document.getElementById('lonInput').value = pos.lon.toFixed(6);
-    evaluate();
-  }, err => {
-    let title = 'GPS error';
-    let msg = err.message;
-    if(err.code === 1){ // PERMISSION_DENIED
-      title = 'Location permission denied';
-      msg = 'Go to your browser/site settings and allow location access for this page, then tap Retry.';
-    } else if(err.code === 2){ // POSITION_UNAVAILABLE
-      title = 'Location unavailable';
-      msg = 'Your device could not determine a position. Make sure GPS/location services are turned on, then tap Retry.';
-    } else if(err.code === 3){ // TIMEOUT
-      title = 'Location request timed out';
-      msg = 'Took too long to get a fix — this can happen indoors or with a weak signal. Tap Retry once you have a clearer view of the sky.';
-    }
-    setBanner(title, msg, false);
-  }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
-}
-function applyManual(){
-  pos = {
-    lat: parseFloat(document.getElementById('latInput').value),
-    lon: parseFloat(document.getElementById('lonInput').value)
-  };
-  evaluate();
-}
-function nudge(dLatSteps, dLonSteps){
-  const metersPerDegLat = 111320;
-  const metersPerDegLon = 111320 * Math.cos(pos.lat * Math.PI/180);
-  const step = 10; // meters
-  pos.lat += (dLatSteps * step) / metersPerDegLat;
-  pos.lon += (dLonSteps * step) / metersPerDegLon;
-  document.getElementById('latInput').value = pos.lat.toFixed(6);
-  document.getElementById('lonInput').value = pos.lon.toFixed(6);
-  evaluate();
+/* ---------- Welcome list ---------- */
+function buildWelcome(){
+  const L=$('placeList'); L.innerHTML='';
+  PLACES.forEach(p=>{
+    const el=document.createElement(p.soon?'div':'button');
+    el.className='card'+(p.soon?' soon':'');
+    el.innerHTML='<div class="row"><div><h3>'+p.name+'</h3>'+(p.alt?'<p style="margin:2px 0 0">('+p.alt+')</p>':'')+'</div><span class="tag '+(p.soon?'':'live')+'">'+(p.soon?'COMING SOON':p.points.length+' POINTS')+'</span></div>';
+    if(!p.soon) el.onclick=()=>openPlace(p);
+    L.appendChild(el);
+  });
+  const sel=$('simPoint'); sel.innerHTML='';
+  PLACES.filter(p=>!p.soon).forEach(p=>p.points.forEach(pt=>{
+    const o=document.createElement('option'); o.value=p.id+':'+pt.n; o.textContent=p.name+' – '+pt.title; sel.appendChild(o);
+  }));
 }
 
-/* ---------------- AR MODAL ---------------- */
-let arStream = null;
-function updateAROrientation(){
-  const overlay = document.getElementById('arOverlay');
-  if(!overlay.classList.contains('open')) return;
-  const isLandscape = window.matchMedia('(orientation: landscape)').matches;
-  overlay.classList.toggle('is-landscape', isLandscape);
+/* ---------- Intro chain ---------- */
+let introQueue=[], introIdx=0, introOn=false;
+function openPlace(p){
+  unlockAudio(); place=p;
+  $('introTitle').textContent=p.name+(p.alt?' ('+p.alt+')':'');
+  $('introMsg').innerHTML=''; $('introGo').textContent='Skip to options';
+  introQueue=[{src:GENERAL_INTRO,label:'Welcome'},{src:base(p)+'intro.mp3',label:p.name+' introduction'}];
+  introIdx=0; go('intro'); introOn=true; introNext(true);
 }
-window.addEventListener('resize', updateAROrientation);
-window.addEventListener('orientationchange', updateAROrientation);
+function introNext(first){
+  if(!first) introIdx++;
+  if(introIdx>=introQueue.length){ introDone(); return; }
+  const it=introQueue[introIdx];
+  $('introStep').textContent='PART '+(introIdx+1)+' OF '+introQueue.length;
+  $('introNow').textContent=it.label; $('introBar').style.width='0%'; $('introPlay').textContent='Pause';
+  audioFail(introAudio,it.label,null);
+  introAudio.onerror=()=>{ log('AUDIO FAILED',it.src); $('introMsg').innerHTML='<div class="banner err">One of the introductions could not be loaded, so we skipped it.</div>'; introNext(); };
+  introAudio.src=it.src; introAudio.play().catch(err=>{ log('play blocked',err.name); $('introPlay').textContent='Play'; });
+}
+function introDone(){ introOn=false; $('introNow').textContent='Introduction finished'; $('introBar').style.width='100%'; openOptions(); }
+function introStop(){ introOn=false; introAudio.pause(); introAudio.onended=null; }
+introAudio.onended=()=>{ if(introOn) introNext(); };
+introAudio.ontimeupdate=()=>{ if(introAudio.duration) $('introBar').style.width=(100*introAudio.currentTime/introAudio.duration)+'%'; };
+$('introPlay').onclick=()=>{ if(introAudio.paused){ introAudio.play(); $('introPlay').textContent='Pause'; } else { introAudio.pause(); $('introPlay').textContent='Play'; } };
+$('introSkip').onclick=()=>{ introAudio.pause(); introNext(); };
+$('introGo').onclick=()=>{ introStop(); openOptions(); };
 
-function openAR(point){
-  const overlay = document.getElementById('arOverlay');
-  overlay.classList.add('open');
-  document.getElementById('arImageName').textContent = point.image;
-  document.getElementById('arCaptionTitle').textContent = point.label;
-  document.getElementById('rotatePtName').textContent = point.label;
-  updateAROrientation();
-  const video = document.getElementById('arVideo');
-  const fallback = document.getElementById('arFallback');
-  const statusEl = document.getElementById('arStatus');
-  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      .then(stream => {
-        arStream = stream;
-        video.srcObject = stream;
-        video.style.display = 'block';
-        fallback.style.display = 'none';
-        statusEl.textContent = 'CAMERA: LIVE';
-      })
-      .catch(() => {
-        video.style.display = 'none';
-        fallback.style.display = 'block';
-        statusEl.textContent = 'CAMERA: UNAVAILABLE — showing photo only';
-      });
-  } else {
-    video.style.display = 'none';
-    fallback.style.display = 'block';
-    statusEl.textContent = 'CAMERA: UNSUPPORTED — showing photo only';
-  }
+/* ---------- Options ---------- */
+function openOptions(){
+  const p=place; introStop();
+  $('optTitle').textContent=p.name+(p.alt?' ('+p.alt+')':'');
+  $('optSub').textContent='How would you like to experience this trail?';
+  $('optCredit').textContent=p.credit?p.credit:'';
+  $('optFiction').textContent=p.fiction?'The story is a work of fiction inspired by this place.':'';
+  const hasMap=true; $('optMap').style.display=hasMap?'block':'none';
+  go('options');
 }
-function closeAR(){
-  document.getElementById('arOverlay').classList.remove('open');
-  if(arStream){ arStream.getTracks().forEach(t => t.stop()); arStream = null; }
-}
+$('optStory').onclick=()=>{ unlockAudio(); openStory(); };
+$('optAR').onclick=()=>{ unlockAudio(); $('ptsTitle').textContent=place.name; go('points'); };
+$('optMap').onclick=()=>{ showMap(); };
 
-/* ---------------- AR POINT GALLERY ---------------- */
-function showGallery(points){
-  const grid = document.getElementById('galleryGrid');
-  grid.innerHTML = points.map(p => {
-    const loc = LOCATIONS.find(l => l.innerPoints.some(pt => pt.id === p.id));
-    return `<button class="gallery-item" onclick='selectGalleryPoint("${p.id}")'>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 7h3l2-2h8l2 2h3v13H3z"/><circle cx="12" cy="13" r="4"/></svg>
-      <span class="gname">${p.label}</span>
-      <span class="gzone">${loc ? loc.name : ''}</span>
-    </button>`;
-  }).join('');
-  document.getElementById('galleryOverlay').classList.add('open');
-}
-function hideGallery(){
-  document.getElementById('galleryOverlay').classList.remove('open');
-}
-function selectGalleryPoint(pointId){
-  hideGallery();
-  const p = findPointById(pointId);
-  if(p) openAR(p);
+function showMap(){
+  const src=base(place)+'map.png';
+  const im=new Image(); im.onload=()=>{ $('ptsTitle').textContent=place.name; const w=$('mapWrap'); if(w) w.remove();
+    const d=document.createElement('div'); d.id='mapWrap'; d.className='full on'; d.style.background='rgba(0,0,0,.92)'; d.style.overflow='auto';
+    d.innerHTML='<button class="fclose">Close</button><img src="'+src+'" style="width:100%;margin-top:60px">'; d.querySelector('button').onclick=()=>d.remove(); document.body.appendChild(d); };
+  im.onerror=()=>toast('The map is not available yet.'); im.src=src;
 }
 
-/* ---------------- QUICK JUMP ---------------- */
-function jumpTo(lat, lon, label){
-  if(mode !== 'manual') setMode('manual');
-  pos = { lat, lon };
-  document.getElementById('latInput').value = pos.lat.toFixed(6);
-  document.getElementById('lonInput').value = pos.lon.toFixed(6);
-  log(`Jumped to <b>${label}</b>`, '');
-  evaluate();
+/* ---------- Story ---------- */
+function openStory(){
+  $('storyTitle').textContent=place.name; $('storyCredit').textContent=place.credit||''; $('storyMsg').innerHTML='';
+  $('storyPlay').textContent='Play'; $('storyBar').style.width='0%'; $('storyTime').textContent='0:00';
+  storyAudio.src=base(place)+'story.mp3'; audioFail(storyAudio,'story',$('storyMsg'));
+  go('story'); storyAudio.play().then(()=>$('storyPlay').textContent='Pause').catch(e=>log('story play blocked',e.name));
 }
-function jumpToZoneCenter(locId){
-  const loc = LOCATIONS.find(l => l.id === locId);
-  jumpTo(loc.center.lat, loc.center.lon, loc.name + ' (center)');
-}
-function jumpToZoneEdge(locId){
-  const loc = LOCATIONS.find(l => l.id === locId);
-  const metersPerDegLat = 111320;
-  const offsetM = loc.radius + 25;
-  const lat = loc.center.lat + offsetM / metersPerDegLat;
-  jumpTo(lat, loc.center.lon, loc.name + ' (just outside)');
-}
-function jumpToPoint(pointId){
-  for(const loc of LOCATIONS){
-    const p = loc.innerPoints.find(pt => pt.id === pointId);
-    if(p) return jumpTo(p.lat, p.lon, p.label);
-  }
-}
-function renderJumpGrid(){
-  const wrap = document.getElementById('jumpGrid');
-  wrap.innerHTML = LOCATIONS.map(loc => `
-    <div class="jump-row">
-      <div class="jname">${loc.name}</div>
-      <button onclick='jumpToZoneEdge("${loc.id}")'>Edge</button>
-      <button onclick='jumpToZoneCenter("${loc.id}")'>Center</button>
-    </div>
-    <div class="jump-row pts">
-      ${loc.innerPoints.map(p => `<button onclick='jumpToPoint("${p.id}")'>→ ${p.label}</button>`).join('')}
-    </div>
-  `).join('');
-}
+$('storyPlay').onclick=()=>{ if(storyAudio.paused){ storyAudio.play(); $('storyPlay').textContent='Pause'; } else { storyAudio.pause(); $('storyPlay').textContent='Play'; } };
+$('storyBack').onclick=()=>{ storyAudio.currentTime=Math.max(0,storyAudio.currentTime-15); };
+$('storyFwd').onclick=()=>{ storyAudio.currentTime=Math.min(storyAudio.duration||1e9,storyAudio.currentTime+15); };
+storyAudio.ontimeupdate=()=>{ if(storyAudio.duration){ $('storyBar').style.width=(100*storyAudio.currentTime/storyAudio.duration)+'%'; $('storyTime').textContent=fmt(storyAudio.currentTime)+' / '+fmt(storyAudio.duration); } };
+storyAudio.onended=()=>{ $('storyPlay').textContent='Play'; };
 
-/* ---------------- RENDER ---------------- */
-function renderZoneList(){
-  const wrap = document.getElementById('zoneList');
-  wrap.innerHTML = '';
-  LOCATIONS.forEach(loc => {
-    const dist = haversine(pos.lat, pos.lon, loc.center.lat, loc.center.lon);
-    const inside = dist <= loc.radius;
-    const pct = Math.max(0, Math.min(100, 100 - (dist/loc.radius*100)));
-
-    const card = document.createElement('div');
-    card.className = 'zone-card';
-    card.innerHTML = `
-      <div class="zone-top">
-        <div>
-          <div class="zone-name">${loc.name}</div>
-          <div class="zone-dist mono">${fmtM(dist)} from center · radius ${loc.radius}m</div>
-        </div>
-        <div class="badge ${inside?'inside':''}">${inside ? 'Inside · audio on' : 'Outside'}</div>
-      </div>
-      <div class="bar"><div class="bar-fill ${inside?'inside':''}" style="width:${pct}%"></div></div>
-      <div class="inner-points">
-        ${loc.innerPoints.map(p => {
-          const pd = haversine(pos.lat, pos.lon, p.lat, p.lon);
-          const trig = pd <= p.radius;
-          return `<div class="inner-pt ${trig?'triggered':''}" onclick='jumpToPoint("${p.id}")'>
-                    <span class="idot"></span>${p.label} · ${fmtM(pd)}
-                  </div>`;
-        }).join('')}
-      </div>
-    `;
-    wrap.appendChild(card);
+/* ============================================================
+   GEOFENCE
+   ============================================================ */
+let watchId=null, lastPos=null, visited={}, nearId=null, pending={id:null,count:0};
+function sim(){ return $('simOn').checked; }
+function startGPS(){
+  renderPoints(); $('ptsStatus').innerHTML='';
+  if(sim()){ onSim(); $('simPoint').onchange=onSim; return; }
+  if(!('geolocation' in navigator)){ $('ptsStatus').innerHTML='<div class="banner err">This device does not support location.</div>'; return; }
+  $('ptsStatus').innerHTML='<div class="banner">Finding your location&hellip;</div>';
+  watchId=navigator.geolocation.watchPosition(onPos,onGPSErr,{enableHighAccuracy:true,maximumAge:2000,timeout:20000});
+}
+function stopGPS(){ if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; } }
+function onGPSErr(e){
+  const m={1:'Location is blocked. Allow location for this site in your browser settings, then reload.',2:'Your location is not available right now. Try moving to an open area.',3:'Finding your location is taking a while. Please wait or move to an open area.'}[e.code]||'Location error.';
+  $('ptsStatus').innerHTML='<div class="banner err">'+m+'</div>'; log('GPS error',e.code);
+}
+function onSim(){
+  const [pid,n]=$('simPoint').value.split(':'); if(pid!==place.id){ $('ptsStatus').innerHTML='<div class="banner">Simulating a position at another trail.</div>'; evaluate(null); return; }
+  const pt=place.points.find(x=>x.n==+n);
+  $('ptsStatus').innerHTML='<div class="banner">Simulated location: '+pt.title+'</div>';
+  lastPos={lat:pt.lat,lon:pt.lon,acc:5}; evaluate(lastPos,true);
+}
+function onPos(pos){
+  const c=pos.coords; if(c.accuracy>GPS_ACCURACY_THRESHOLD_M){ $('ptsStatus').innerHTML='<div class="banner">Waiting for a stronger GPS signal (about '+Math.round(c.accuracy)+' m).</div>'; log('weak fix',Math.round(c.accuracy)); return; }
+  lastPos={lat:c.latitude,lon:c.longitude,acc:c.accuracy}; evaluate(lastPos,false);
+}
+function evaluate(pos,instant){
+  if(!pos){ nearId=null; renderPoints(); return; }
+  const dCenter=haversine(pos.lat,pos.lon,place.center.lat,place.center.lon);
+  const inside=dCenter<=place.radius;
+  let best=null,bd=1e9;
+  place.points.forEach(pt=>{ pt._d=haversine(pos.lat,pos.lon,pt.lat,pt.lon); if(pt._d<bd){bd=pt._d;best=pt;} });
+  const candidate=(best&&bd<=place.pointRadius)?best.n:null;
+  if(instant||candidate===nearId){ pending={id:null,count:0}; nearId=candidate; }
+  else if(pending.id===candidate){ if(++pending.count>=CONFIRM_READINGS_REQUIRED){ nearId=candidate; pending={id:null,count:0}; } }
+  else pending={id:candidate,count:1};
+  if(nearId) visited[place.id+':'+nearId]=true;
+  $('ptsStatus').innerHTML=nearId?'':( inside
+    ? '<div class="banner">You are on the trail. Nearest point: '+best.title+', about '+Math.round(bd)+' m away.</div>'
+    : '<div class="banner">You are about '+Math.round(dCenter-place.radius)+' m outside the trail area. Head to the first point to begin.</div>');
+  renderPoints();
+}
+function renderPoints(){
+  const L=$('ptsList'); L.innerHTML='';
+  place.points.forEach(pt=>{
+    const near=nearId===pt.n, seen=visited[place.id+':'+pt.n], open=near||seen;
+    const el=document.createElement('button'); el.className='card';
+    el.innerHTML='<div class="row"><div><h3>'+pt.title+'</h3><p style="margin:2px 0 0">'+(near?'You are here':seen?'Visited':(pt._d!=null?Math.round(pt._d)+' m away':'Not reached yet'))+'</p></div><span class="tag '+(near?'near':'')+'">'+(near?'OPEN':seen?'VISITED':'LOCKED')+'</span></div>';
+    el.onclick=()=>{ if(open) openPoint(pt); else toast('Walk to this point to unlock it.'); };
+    if(!open) el.style.opacity=.6;
+    L.appendChild(el);
   });
 }
 
-function renderRadar(nearest, dist, inside){
-  document.getElementById('radarName').textContent = nearest ? nearest.name : '—';
-  document.getElementById('metaDist').textContent = nearest ? fmtM(dist) : '—';
-  document.getElementById('metaRadius').textContent = nearest ? nearest.radius+'m' : '—';
-
-  const circumference = 439.8;
-  const pct = nearest ? Math.max(0, Math.min(1, 1 - dist/nearest.radius)) : 0;
-  const offset = circumference * (1 - Math.max(pct, 0.02));
-  const ring = document.getElementById('ringFill');
-  ring.setAttribute('stroke-dashoffset', offset);
-  ring.classList.toggle('inside', inside);
-  document.getElementById('radarDot').classList.toggle('inside', inside);
-
-  const p1 = document.getElementById('pulse1'), p2 = document.getElementById('pulse2');
-  p1.classList.toggle('animate', inside);
-  p2.classList.toggle('animate', inside);
-
-  const pill = document.getElementById('audioPill');
-  const pillText = document.getElementById('audioPillText');
-  pill.classList.toggle('on', insideZones.size > 0);
-  pillText.textContent = insideZones.size > 0
-    ? `Playing: ${[...insideZones].map(id => LOCATIONS.find(l=>l.id===id).name).join(', ')}`
-    : 'Audio idle';
+/* ============================================================
+   POINT SCREEN
+   ============================================================ */
+let curPt=null;
+function exists(url){ return fetch(url,{method:'HEAD'}).then(r=>r.ok).catch(()=>false); }
+async function openPoint(pt){
+  curPt=pt; const a=pointAssets(place,pt);
+  $('ptTitle').textContent=pt.title; $('ptHint').textContent=pt.hint||'';
+  $('ptPics').innerHTML=''; $('ptActions').innerHTML=''; $('ptAudioBox').style.display='none'; $('ptBar').style.width='0%'; $('ptPlay').textContent='Play';
+  go('point');
+  // photos (a/b are shown as separate pictures with a short label)
+  a.photos.forEach((src,i)=>{ const im=new Image(); im.className='pic'; im.alt=pt.title+' photo'; im.onload=()=>{ const w=document.createElement('div'); if(pt.options){ const t=document.createElement('p'); t.className='mono'; t.textContent='VIEW '+pt.options[i].toUpperCase(); w.appendChild(t);} w.appendChild(im); $('ptPics').appendChild(w); }; im.onerror=()=>log('photo missing',src); im.src=src; });
+  // audio
+  if(await exists(a.audio)){ $('ptAudioBox').style.display='block'; ptAudio.src=a.audio; audioFail(ptAudio,'point',null); ptAudio.play().then(()=>$('ptPlay').textContent='Pause').catch(()=>{}); }
+  // actions
+  if(pt.overlay && await exists(a.overlay)) addAction('See then and now (camera)',()=>openCamera(a.overlay));
+  if(pt.panorama && await exists(a.pano)) addAction('Look around in 360°',()=>openPano(a.pano));
 }
+function addAction(label,fn){ const b=document.createElement('button'); b.className='btn primary'; b.textContent=label; b.onclick=fn; $('ptActions').appendChild(b); }
+$('ptPlay').onclick=()=>{ if(ptAudio.paused){ ptAudio.play(); $('ptPlay').textContent='Pause'; } else { ptAudio.pause(); $('ptPlay').textContent='Play'; } };
+ptAudio.ontimeupdate=()=>{ if(ptAudio.duration) $('ptBar').style.width=(100*ptAudio.currentTime/ptAudio.duration)+'%'; };
+ptAudio.onended=()=>{ $('ptPlay').textContent='Play'; };
 
-/* ---------------- EVALUATE (core trigger logic) ---------------- */
-function findPointById(pointId){
-  for(const loc of LOCATIONS){
-    const p = loc.innerPoints.find(pt => pt.id === pointId);
-    if(p) return p;
-  }
-  return null;
+/* ============================================================
+   CAMERA OVERLAY (opens only on tap)
+   ============================================================ */
+let camStream=null;
+async function openCamera(src){
+  ptAudio.pause();
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+  }catch(e){ log('camera denied',e.name); toast('Camera permission is needed for this view. Allow it in your browser settings.'); return; }
+  $('camVid').srcObject=camStream; $('camOv').src=src; $('camOpacity').value=50; $('camOv').style.opacity=.5;
+  $('camView').classList.add('on');
 }
+$('camOpacity').oninput=e=>{ $('camOv').style.opacity=e.target.value/100; };
+$('camClose').onclick=()=>{ $('camView').classList.remove('on'); if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; } $('camVid').srcObject=null; };
 
-function evaluate(){
-  let nearest = null, nearestDist = Infinity, nearestInside = false;
-  // Manual/simulate mode has no GPS accuracy figure and is meant for instant
-  // desk testing, so only real GPS mode requires consecutive confirming reads.
-  const requireConfirmation = (mode === 'gps');
-  let anyPointEntered = false;
-  let anyPointChanged = false;
-
-  LOCATIONS.forEach(loc => {
-    const dist = haversine(pos.lat, pos.lon, loc.center.lat, loc.center.lon);
-    const inside = dist <= loc.radius;
-
-    if(dist < nearestDist){ nearestDist = dist; nearest = loc; nearestInside = inside; }
-
-    // --- Outer audio zone transitions ---
-    const wasInside = insideZones.has(loc.id);
-    if(inside !== wasInside){
-      const confirmed = !requireConfirmation || confirmTransition(pendingZoneState, loc.id, inside);
-      if(confirmed){
-        if(inside){
-          insideZones.add(loc.id);
-          AudioEngine.start(loc.id);
-          log(`Entered <b>${loc.name}</b> — audio started`, 'audio');
-        } else {
-          insideZones.delete(loc.id);
-          AudioEngine.stop(loc.id);
-          log(`Left <b>${loc.name}</b> — audio stopped`, 'audio');
-        }
-      }
-    } else {
-      delete pendingZoneState[loc.id];
-    }
-
-    // --- Inner AR trigger points (independent of audio) ---
-    loc.innerPoints.forEach(p => {
-      const pd = haversine(pos.lat, pos.lon, p.lat, p.lon);
-      const trig = pd <= p.radius;
-      const wasTrig = triggeredPoints.has(p.id);
-      if(trig !== wasTrig){
-        const confirmed = !requireConfirmation || confirmTransition(pendingPointState, p.id, trig);
-        if(confirmed){
-          anyPointChanged = true;
-          if(trig){
-            triggeredPoints.add(p.id);
-            log(`AR trigger reached — <b>${p.label}</b> (${loc.name})`, 'ar');
-            anyPointEntered = true;
-          } else {
-            triggeredPoints.delete(p.id);
-          }
-        }
-      } else {
-        delete pendingPointState[p.id];
-      }
-    });
-  });
-
-  if(anyPointChanged) handleInnerTriggers(anyPointEntered);
-
-  renderZoneList();
-  renderRadar(nearest, nearestDist, nearestInside);
+/* ============================================================
+   360 VIEWER (WebGL equirectangular; phone motion or drag)
+   ============================================================ */
+const pano={gl:null,prog:null,tex:null,yaw:0,pitch:0,fov:75,orient:null,useSensors:false,raf:0,screenAngle:0};
+async function openPano(src){
+  ptAudio.pause();
+  // iOS needs a permission request from a tap
+  if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){
+    try{ const r=await DeviceOrientationEvent.requestPermission(); pano.useSensors=(r==='granted'); }catch(e){ pano.useSensors=false; }
+  } else pano.useSensors=('DeviceOrientationEvent' in window);
+  const img=new Image();
+  img.onerror=()=>toast('Could not load the 360° picture.');
+  img.onload=()=>{ $('panView').classList.add('on'); initPano(img); };
+  img.src=src;
 }
-
-// Decides what the AR UI should show given everything currently in range:
-// a single point auto-opens its AR view as before, but two or more at once
-// go to a combined gallery so the user picks one instead of overlays fighting
-// each other for the same modal. Runs on every entry/exit so the gallery list
-// stays accurate as points leave range too, but only auto-opens/closes the
-// camera view on a fresh entry — never as a surprise side effect of someone
-// else walking out of range.
-function handleInnerTriggers(hasNewEntry){
-  const inRange = [...triggeredPoints].map(findPointById).filter(Boolean);
-  if(inRange.length >= 2){
-    if(hasNewEntry) closeAR();
-    showGallery(inRange);
-  } else if(inRange.length === 1){
-    hideGallery();
-    if(hasNewEntry) openAR(inRange[0]);
+function initPano(img){
+  const cv=$('panCanvas'); const gl=cv.getContext('webgl',{antialias:false}); if(!gl){ toast('Your phone cannot show 360° views.'); $('panView').classList.remove('on'); return; }
+  pano.gl=gl;
+  const vs='attribute vec2 p;varying vec2 v;void main(){v=p;gl_Position=vec4(p,0.,1.);}';
+  const fs='precision highp float;varying vec2 v;uniform mat3 R;uniform float tf;uniform float asp;uniform sampler2D t;'+
+   'void main(){vec3 d=normalize(vec3(v.x*asp*tf,v.y*tf,-1.));d=R*d;'+
+   'float lon=atan(d.x,-d.z);float lat=asin(clamp(d.y,-1.,1.));'+
+   'gl_FragColor=texture2D(t,vec2(lon/6.2831853+.5,.5-lat/3.1415927));}';
+  const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);return o;};
+  const pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(pr); gl.useProgram(pr); pano.prog=pr;
+  const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(pr,'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  // downscale if the picture is larger than the phone allows
+  const max=gl.getParameter(gl.MAX_TEXTURE_SIZE); let src=img;
+  if(img.width>max){ const c=document.createElement('canvas'); c.width=max; c.height=Math.round(img.height*max/img.width); c.getContext('2d').drawImage(img,0,0,c.width,c.height); src=c; }
+  const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,src);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  pano.tex=tex; pano.yaw=0; pano.pitch=0; pano.orient=null;
+  resizePano(); window.addEventListener('resize',resizePano);
+  if(pano.useSensors){ window.addEventListener('deviceorientation',onOrient,true); $('panHint').textContent='Move your phone around, or drag to look.'; }
+  else $('panHint').textContent='Drag to look around.';
+  cv.onpointerdown=dragStart; cv.onpointermove=dragMove; cv.onpointerup=cv.onpointercancel=dragEnd;
+  cancelAnimationFrame(pano.raf); drawPano();
+}
+function resizePano(){ const cv=$('panCanvas'),d=Math.min(window.devicePixelRatio||1,2); cv.width=cv.clientWidth*d; cv.height=cv.clientHeight*d; if(pano.gl) pano.gl.viewport(0,0,cv.width,cv.height); pano.screenAngle=(screen.orientation&&screen.orientation.angle)||window.orientation||0; }
+function onOrient(e){ if(e.alpha==null) return; pano.orient={a:e.alpha,b:e.beta,g:e.gamma}; }
+let drag=null;
+function dragStart(e){ drag={x:e.clientX,y:e.clientY}; e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId); }
+function dragMove(e){ if(!drag) return; const k=pano.fov/$('panCanvas').clientHeight; pano.yaw-=(e.clientX-drag.x)*k*1.0; pano.pitch=Math.max(-85,Math.min(85,pano.pitch+(e.clientY-drag.y)*k)); drag={x:e.clientX,y:e.clientY}; }
+function dragEnd(){ drag=null; }
+function matMul(a,b){ const o=new Array(9); for(let r=0;r<3;r++)for(let c=0;c<3;c++)o[r*3+c]=a[r*3]*b[c]+a[r*3+1]*b[3+c]+a[r*3+2]*b[6+c]; return o; }
+function rotX(t){const c=Math.cos(t),s=Math.sin(t);return[1,0,0,0,c,-s,0,s,c];}
+function rotY(t){const c=Math.cos(t),s=Math.sin(t);return[c,0,s,0,1,0,-s,0,c];}
+function rotZ(t){const c=Math.cos(t),s=Math.sin(t);return[c,-s,0,s,c,0,0,0,1];}
+function sensorMatrix(o,screenAngle){
+  const d=Math.PI/180, alpha=o.a*d, beta=o.b*d, gamma=o.g*d, orient=screenAngle*d;
+  // three.js DeviceOrientationControls: Euler YXZ (beta, alpha, -gamma), then Rx(-90deg) and Rz(-screen angle)
+  let m=matMul(matMul(rotY(alpha),rotX(beta)),rotZ(-gamma));
+  m=matMul(m,rotX(-Math.PI/2));
+  m=matMul(m,rotZ(-orient));
+  return m;
+}
+function drawPano(){
+  const gl=pano.gl; if(!gl) return;
+  let R;
+  if(pano.useSensors && pano.orient){
+    R=sensorMatrix(pano.orient,pano.screenAngle);
+    // let dragging add a small offset on top of the sensors
+    R=matMul(rotY(-pano.yaw*Math.PI/180),matMul(rotX(pano.pitch*Math.PI/180),R)); // note: offset applied in view space
   } else {
-    hideGallery();
+    R=matMul(rotY(-pano.yaw*Math.PI/180),rotX(-pano.pitch*Math.PI/180));
   }
+  // GLSL mat3 is column-major: transpose our row-major array
+  const T=[R[0],R[3],R[6],R[1],R[4],R[7],R[2],R[5],R[8]];
+  const cv=$('panCanvas');
+  gl.uniformMatrix3fv(gl.getUniformLocation(pano.prog,'R'),false,T);
+  gl.uniform1f(gl.getUniformLocation(pano.prog,'tf'),Math.tan(pano.fov*Math.PI/360));
+  gl.uniform1f(gl.getUniformLocation(pano.prog,'asp'),cv.width/cv.height);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  pano.raf=requestAnimationFrame(drawPano);
 }
-
-window.__openARPoint = function(pointId){
-  const p = findPointById(pointId);
-  if(p) return openAR(p);
+$('panClose').onclick=()=>{
+  $('panView').classList.remove('on'); cancelAnimationFrame(pano.raf);
+  window.removeEventListener('deviceorientation',onOrient,true); window.removeEventListener('resize',resizePano);
+  if(pano.gl){ const e=pano.gl.getExtension('WEBGL_lose_context'); e&&e.loseContext(); } pano.gl=null;
 };
 
-/* ---------------- PWA INSTALL ---------------- */
-let deferredInstallPrompt = null;
-
-function isStandaloneDisplay(){
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-}
-function isIOSSafari(){
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-}
-function showInstallBanner(kind){
-  const banner = document.getElementById('installBanner');
-  const btn = document.getElementById('installBtn');
-  banner.style.display = 'block';
-  if(kind === 'ios'){
-    document.getElementById('installBannerMsg').innerHTML = 'iOS doesn\'t support an automatic install button — in Safari, tap the Share icon, then "Add to Home Screen."';
-    btn.style.display = 'none';
-  } else {
-    document.getElementById('installBannerMsg').textContent = 'Install Sankofa Trails for quick, full-screen access on your trail walk.';
-    btn.style.display = 'inline-block';
-  }
-}
-function hideInstallBanner(){
-  document.getElementById('installBanner').style.display = 'none';
-}
-async function doInstall(){
-  if(!deferredInstallPrompt) return;
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
-  hideInstallBanner();
-}
-function initInstallUI(){
-  if(isStandaloneDisplay()) return; // already installed — nothing to prompt
-  if(isIOSSafari()) showInstallBanner('ios');
-  // Android/Chrome shows its own button once beforeinstallprompt fires (below).
-}
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  showInstallBanner('android');
-});
-window.addEventListener('appinstalled', () => {
-  deferredInstallPrompt = null;
-  hideInstallBanner();
-});
-
-if('serviceWorker' in navigator){
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker registration failed:', err));
-  });
-}
-
-/* ---------------- INIT ---------------- */
-initAudioElements();
-renderJumpGrid();
-evaluate();
-requestGPS();
-initInstallUI();
+/* ============================================================
+   START
+   ============================================================ */
+buildWelcome();
+if(new URLSearchParams(location.search).has('dev')) $('dev').open=true;
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>log('sw failed',e.message))); }
+window.addEventListener('error',e=>log('JS error',e.message));
 </script>
 </body>
 </html>

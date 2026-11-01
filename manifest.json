@@ -1,7 +1,7 @@
 {
-  "name": "Sankofa Trails — Geofence Audio Guide",
+  "name": "Sankofa Trails",
   "short_name": "Sankofa Trails",
-  "description": "Ambient narration and AR photo points that trigger as you walk the Barbados trail.",
+  "description": "Audio stories and AR points along the trails of Barbados.",
   "start_url": ".",
   "scope": ".",
   "id": ".",
