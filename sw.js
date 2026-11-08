@@ -1,10 +1,10 @@
-const CACHE_NAME = 'sankofa-trails-v4';
+const CACHE_NAME = 'sankofa-trails-v5';
 const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './images/background-1400.jpg',
-  './images/logo.png',
+  './images/logo-app.png',
   './images/logo-mark.png',
   './icons/icon-192.png',
   './icons/icon-512.png',

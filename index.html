@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0d1b1c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Sankofa Trails">
+<meta name="apple-mobile-web-app-title" content="Sankofa">
 <title>Sankofa Trails</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/favicon-32.png">
@@ -72,7 +72,26 @@ button.card{cursor:pointer}
 .full.on{display:block}
 .full video,.full canvas,.full .ovimg{position:absolute;inset:0;width:100%;height:100%}
 .full video{object-fit:cover}
-.full .ovimg{object-fit:cover;opacity:.5}
+.full .ovimg{background:center/contain no-repeat;opacity:.5}
+.full video.ovvid{object-fit:contain;opacity:.5;display:none;pointer-events:none;background:transparent}
+.full video.ovvid.on{display:block}
+/* pictures are drawn as backgrounds (not img tags) so there is no "save image" menu, and nothing can be dragged out */
+body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.dev,.dev *{-webkit-user-select:text;user-select:text}
+.gimg{width:100%;border-radius:14px;border:1px solid var(--line);background:center/100% 100% no-repeat;display:block;-webkit-touch-callout:none}
+.gal{position:relative;margin-top:12px}
+.galTrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.galTrack::-webkit-scrollbar{display:none}
+.galSlide{flex:0 0 100%;scroll-snap-align:center;min-width:0}
+.galBar{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:10px}
+.galBar .arrow{background:rgba(22,41,42,.96);border:1px solid var(--line);color:var(--text);border-radius:99px;width:40px;height:40px;font:600 1.1rem var(--sans);cursor:pointer}
+.galDots{display:flex;gap:8px}.galDots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}.galDots i.on{background:var(--coral)}
+.ico{width:22px;height:22px;fill:currentColor;display:block}
+.ctl .btn.icon{width:58px;height:58px;padding:0;border-radius:50%}
+.lever{display:flex;justify-content:space-between;font:600 .8rem var(--mono);color:#ddd;letter-spacing:.08em;margin-top:2px}
+.choice{display:grid;gap:10px;margin-top:6px}
+.brand{display:block;width:min(260px,70vw);aspect-ratio:1;margin:4vh auto 14px;border-radius:26px;background:url('images/logo-app.png') center/cover no-repeat}
+.sr{position:absolute;left:-9999px}
 .full canvas{touch-action:none}
 .fbar{position:absolute;left:0;right:0;bottom:0;padding:14px 18px max(18px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.75));z-index:2}
 .fbar input[type=range]{width:100%;accent-color:#e2895a}
@@ -81,17 +100,17 @@ button.card{cursor:pointer}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--bg-raised);border:1px solid var(--line);padding:10px 16px;border-radius:99px;font-size:.85rem;z-index:99;display:none;max-width:90%}
 /* story: tall picture fills the screen, controls float over it */
 #s-story.on{display:block;max-width:none;padding:0}
-.storyArt{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;display:none}
+.storyArt{position:fixed;inset:0;width:100%;height:100%;background:center/cover no-repeat;z-index:0;display:none}
 .storyTop{position:fixed;top:0;left:0;right:0;z-index:2;padding:max(14px,env(safe-area-inset-top)) 18px 46px;background:linear-gradient(rgba(13,27,28,.88),transparent)}
 .storyTop h2,.storyTop p{text-shadow:0 1px 4px rgba(0,0,0,.7)}
 .storyDock{position:fixed;left:0;right:0;bottom:0;z-index:3;padding:46px 16px max(16px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(13,27,28,.93) 48%)}
 .storyDock .player{background:rgba(13,27,28,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);max-width:520px;margin:0 auto}
 .storyDock .notice{max-width:520px;margin:10px auto 0;text-align:center}
-.logoMark{width:36px;height:36px;object-fit:contain;flex:none}
+.logoMark{width:44px;height:44px;border-radius:10px;background:url('images/logo-app.png') center/cover no-repeat;flex:none;display:block}
 .modal{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:20px}
 .modal.on{display:flex}
 .modalCard{background:var(--bg-raised);border:1px solid var(--coral-dim);border-radius:20px;padding:22px;max-width:380px;width:100%;text-align:center}
-.modalCard .logoMark{width:56px;height:56px;margin:0 auto 10px;display:block}
+.modalCard .logoMark{width:84px;height:84px;border-radius:16px;margin:0 auto 10px;display:block}
 </style>
 </head>
 <body>
@@ -99,15 +118,16 @@ button.card{cursor:pointer}
 
 <!-- 1. WELCOME / CHOOSE A TRAIL -->
 <section class="screen on" id="s-welcome">
-  <img class="logo" src="images/logo-mark.png" alt="" onerror="this.style.display='none'">
+  <div class="brand" role="img" aria-label="Sankofa Trails"></div>
   <div class="center">
-    <h1>Sankofa Trails</h1>
+    <h1 class="sr">Sankofa Trails</h1>
     <p>Audio stories and AR points along the trails of Barbados.</p>
   </div>
   <p class="mono center" style="margin-top:26px">CHOOSE YOUR TRAIL</p>
   <div id="placeList"></div>
   <div id="zoneMsg"></div>
   <p class="notice">Use headphones if you can, keep your volume up, and stay aware of traffic and uneven ground as you walk. Tap a trail to begin; you will be asked to allow location access so the app knows when you reach each point.</p>
+  <p class="notice" style="margin-top:8px">&copy; 2026 Sankofa Trails. The pictures, audio and stories in this app are protected by copyright. Please do not copy, record or share them.</p>
   <details class="dev" id="dev" style="display:none">
     <summary>Testing mode: <span id="modeName">Public</span></summary>
     <div style="display:flex;gap:6px;margin-top:10px">
@@ -129,12 +149,12 @@ button.card{cursor:pointer}
     <div class="mono" id="introNow">Starting&hellip;</div>
     <div class="bar"><i id="introBar"></i></div>
     <div class="ctl">
-      <button class="btn ghost" id="introPlay">Pause</button>
+      <button class="btn ghost icon" id="introPlay" aria-label="Pause"></button>
       <button class="btn ghost" id="introSkip">Skip</button>
     </div>
   </div>
   <div id="introMsg"></div>
-  <img id="introMap" class="pic" alt="Map of Barbados showing the Sankofa trails" style="display:none;cursor:zoom-in;max-height:52vh;object-fit:contain;background:#02001f">
+  <div id="introMap" class="gimg" role="img" aria-label="Map of Barbados showing the Sankofa trails" style="display:none;cursor:zoom-in;height:52vh;margin-top:12px;background-size:contain;background-color:#02001f"></div>
   <p class="mono" id="introMapNote" style="display:none;text-align:center">TAP THE MAP TO ENLARGE</p>
   <button class="btn primary" id="introGo" style="margin-top:16px">Continue</button>
 </section>
@@ -151,7 +171,7 @@ button.card{cursor:pointer}
 
 <!-- 4. STORY -->
 <section class="screen" id="s-story">
-  <img class="storyArt" id="storyArt" alt="">
+  <div class="storyArt" id="storyArt" role="img" aria-label=""></div>
   <div class="storyTop"><button class="back" data-go="options">&larr; Back</button><h2 id="storyTitle"></h2><p id="storyCredit"></p></div>
   <div class="storyDock">
   <div class="player">
@@ -159,7 +179,7 @@ button.card{cursor:pointer}
     <div class="bar"><i id="storyBar"></i></div>
     <div class="ctl">
       <button class="btn ghost" id="storyBack">&minus;15s</button>
-      <button class="btn primary" id="storyPlay">Play</button>
+      <button class="btn primary icon" id="storyPlay" aria-label="Play"></button>
       <button class="btn ghost" id="storyFwd">+15s</button>
     </div>
   </div>
@@ -176,10 +196,11 @@ button.card{cursor:pointer}
   <div class="player" id="ptsIntro" style="display:none">
     <div class="mono">INTRODUCTION</div>
     <div class="bar"><i id="ptsIntroBar"></i></div>
-    <div class="ctl"><button class="btn ghost" id="ptsIntroPlay">Pause</button><button class="btn ghost" id="ptsIntroSkip">Skip</button></div>
+    <div class="ctl"><button class="btn ghost icon" id="ptsIntroPlay" aria-label="Pause"></button><button class="btn ghost" id="ptsIntroSkip">Skip</button></div>
   </div>
-  <img id="ptsMap" class="pic" alt="Trail map" style="display:none;cursor:zoom-in">
+  <div id="ptsMap" class="gimg" role="img" aria-label="Trail map" style="display:none;cursor:zoom-in;margin-top:12px"></div>
   <div id="ptsStatus"></div>
+  <button class="btn ghost" id="unlockBtn" style="display:none;margin-top:6px">I&rsquo;m here but it won&rsquo;t unlock</button>
   <p class="mono" style="margin-top:16px">AR POINTS</p>
   <div id="ptsList"></div>
   <div id="markBox" style="display:none" class="dev">
@@ -197,7 +218,7 @@ button.card{cursor:pointer}
   <div class="player" id="ptAudioBox" style="display:none">
     <div class="mono">POINT AUDIO</div>
     <div class="bar"><i id="ptBar"></i></div>
-    <div class="ctl"><button class="btn ghost" id="ptPlay">Play</button></div>
+    <div class="ctl"><button class="btn ghost icon" id="ptPlay" aria-label="Play"></button></div>
   </div>
   <div id="ptPics"></div>
   <div id="ptActions" style="margin-top:14px"></div>
@@ -206,10 +227,11 @@ button.card{cursor:pointer}
 <!-- Full-screen: camera overlay -->
 <div class="full" id="camView">
   <video id="camVid" playsinline muted autoplay></video>
-  <img class="ovimg" id="camOv" alt="">
-  <div class="fhint" id="camHint">Line the picture up with the view in front of you.</div>
+  <div class="ovimg" id="camOv" role="img" aria-label=""></div>
+  <video class="ovvid" id="camOvVid" playsinline loop preload="auto"></video>
+  <div class="fhint" id="camHint">Turn your phone sideways (landscape), then line the picture up with the view in front of you.</div>
   <button class="fclose" id="camClose">Close</button>
-  <div class="fbar"><div class="mono" style="color:#ddd">THEN &larr; &rarr; NOW</div><input type="range" id="camOpacity" min="0" max="100" value="50"></div>
+  <div class="fbar"><input type="range" id="camOpacity" min="0" max="100" value="50" aria-label="Now and then"><div class="lever"><span>NOW</span><span>THEN</span></div></div>
 </div>
 
 <!-- Full-screen: 360 viewer -->
@@ -220,12 +242,20 @@ button.card{cursor:pointer}
 </div>
 
 <div class="modal" id="arModal"><div class="modalCard">
-  <img class="logoMark" src="images/logo-mark.png" alt="" onerror="this.style.display='none'">
+  <div class="logoMark" role="img" aria-label="Sankofa Trails"></div>
   <h2 id="arTitle">You have reached an AR point</h2>
   <p id="arText"></p>
+  <p id="arTip" class="mono" style="color:var(--coral)">TIP: TURN YOUR PHONE SIDEWAYS (LANDSCAPE) FOR THE BEST VIEW</p>
   <button class="btn primary" id="arGo" style="margin-top:14px">Open camera</button>
+  <button class="btn primary" id="arAlt" style="display:none">See the maps</button>
   <button class="btn ghost" id="arLater">Not now</button>
   <p class="notice">Look up. Stay aware of traffic and your surroundings, and do not walk while looking at your screen.</p>
+</div></div>
+<div class="modal" id="unlockModal"><div class="modalCard">
+  <h2>Unlock this AR point?</h2>
+  <p id="unlockText"></p>
+  <button class="btn primary" id="unlockYes" disabled style="margin-top:14px">Please wait&hellip;</button>
+  <button class="btn ghost" id="unlockNo">Cancel</button>
 </div></div>
 <div id="simBar" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--bg-raised);border-top:1px solid var(--coral-dim);padding:8px 14px">
   <label class="mono" style="display:block">SIMULATED POSITION <select id="simPoint" style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text)"></select></label>
@@ -257,10 +287,32 @@ const PLACES = [
       {n:2,title:'Point 2',lat:13.120894,lon:-59.565876,ar:true},
       /* point 3 was 13.120466,-59.563278 (in the bush); now from the field-test photo GPS */
       {n:3,title:'Point 3',lat:13.120852,lon:-59.564350,panorama:true},
-      {n:4,title:'Point 4',lat:13.120664,lon:-59.562695,ar:true}
+      {n:4,title:'Point 4',lat:13.120664,lon:-59.562695,ar:true,gallery:['','b'],r:16}
     ]},
-  { id:'tentbay', name:'Tent Bay', soon:true },
-  { id:'joesriver', name:"Joe's River", soon:true }
+  /* Tent Bay and Joe's River are switched on for testers only (open the link with ?dev). Everyone else sees "Coming soon".
+     Tent Bay: points still incomplete and may be redone; outer zone is provisional until all points are final.
+     Joe's River: point 1 still to be confirmed; outer zone provisional. 'views' = the pictures (and audio) at one point, shown as View A / View B. */
+  { id:'tentbay', name:'Tent Bay', alt:'Bathsheba', devOnly:true, soon:true,
+    center:{lat:13.212034, lon:-59.517328}, radius:380, pointRadius:10,
+    points:[
+      /* 2026-11-07: points picked from Google Maps by the user. Spots that sit within a few metres of each other are
+         one "folder" (views:[...]): one trigger, and the visitor chooses which AR view to open.
+         Folder 1 = old points 1 and 2 (4 m apart); folder 5 = old points 6 and 7 (about 10 m apart). */
+      {n:1,title:'Point 1',lat:13.211325,lon:-59.514515,ar:true,views:['point-1','point-2']},
+      {n:2,title:'Point 2',lat:13.211524,lon:-59.514852,ar:true,views:['point-3']},
+      {n:3,title:'Point 3',lat:13.211803,lon:-59.515428,ar:true,views:['point-4']},
+      {n:4,title:'Point 4',lat:13.211870,lon:-59.518713,ar:true,views:['point-5']},
+      {n:5,title:'Point 5',lat:13.212767,lon:-59.520135,ar:true,views:['point-6','point-7']}
+    ]},
+  { id:'joesriver', name:"Joe's River", devOnly:true, soon:true,
+    center:{lat:13.216024, lon:-59.526703}, radius:180, pointRadius:10,
+    points:[
+      /* 2026-11-07: points picked from Google Maps by the user. Points 2 and 3 were given the same spot, so they are one folder (two AR views). */
+      {n:1,title:'Point 1',lat:13.216471,lon:-59.527599,ar:true,views:['point-1']},
+      {n:2,title:'Point 2',lat:13.216454,lon:-59.527432,ar:true,views:['point-2','point-3']},
+      {n:3,title:'Point 3',lat:13.216421,lon:-59.527063,ar:true,views:['point-4']},
+      {n:4,title:'Point 4',lat:13.215577,lon:-59.525806,ar:true,views:['point-5']}
+    ]}
 ];
 const GPS_ACCURACY_THRESHOLD_M = 50;
 const CONFIRM_READINGS_REQUIRED = 3;
@@ -269,6 +321,24 @@ const CONFIRM_READINGS_REQUIRED = 3;
    HELPERS
    ============================================================ */
 const $ = id => document.getElementById(id);
+/* ---------- pictures are drawn as backgrounds, keeping their own shape (only story pictures are fitted to the phone) ---------- */
+function setPic(el,src,opts){
+  opts=opts||{};
+  return new Promise(res=>{
+    const im=new Image();
+    im.onload=()=>{ el.style.backgroundImage='url("'+src+'")'; if(opts.ratio!==false) el.style.aspectRatio=im.naturalWidth+' / '+im.naturalHeight; res(true); };
+    im.onerror=()=>res(false);
+    im.src=src;
+  });
+}
+const ICON_PLAY='<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+const ICON_PAUSE='<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+function setPP(id,playing){ const b=$(id); b.innerHTML=playing?ICON_PAUSE:ICON_PLAY; b.setAttribute('aria-label',playing?'Pause':'Play'); }
+setPP('introPlay',true); setPP('ptsIntroPlay',true); setPP('storyPlay',false); setPP('ptPlay',false);
+/* ---------- discourage saving the content ---------- */
+let DEV_FLAG=false;
+document.addEventListener('contextmenu',e=>{ if(!DEV_FLAG) e.preventDefault(); });
+document.addEventListener('dragstart',e=>e.preventDefault());
 const log = (...a)=>{ try{ console.log('[sankofa]',...a); const d=$('devLog'); d.textContent=(new Date().toLocaleTimeString()+' '+a.join(' ')+'\n'+d.textContent).slice(0,900);}catch(e){} };
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toast._t); toast._t=setTimeout(()=>t.style.display='none',3200); }
 function haversine(lat1,lon1,lat2,lon2){
@@ -282,10 +352,12 @@ function pointAssets(p,pt){
   const b=base(p), k='point-'+pt.n;
   return {
     audio:b+'audio/'+k+'.mp3',
-    photos:(pt.options||[]).map(o=>b+'photos/'+k+o+'.jpg'),
+    maps:(pt.options||[]).map(o=>b+'photos/'+k+o+'.jpg'),
+    gallery:(pt.gallery||[]).map(o=>b+'photos/'+k+o+'.jpg'),
     photo:b+'photos/'+k+'.jpg',
     overlay:b+'overlays/'+k+'.jpg',
-    pano:b+'panoramas/'+k+'.jpg'
+    pano:b+'panoramas/'+k+'.jpg',
+    views:(pt.views||[]).map(v=>({audio:b+'audio/'+v+'.mp3',overlay:b+'overlays/'+v+'.jpg',photo:b+'photos/'+v+'.jpg',vids:[b+'overlays/'+v+'.mp4',b+'photos/'+v+'.mp4']}))
   };
 }
 
@@ -293,10 +365,11 @@ function pointAssets(p,pt){
    SCREENS
    ============================================================ */
 let current='welcome', place=null, MODE='public', DEV=false;
-function go(name){
+function show(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   $('s-'+name).classList.add('on'); current=name; window.scrollTo(0,0);
-  if(name!=='points') stopGPS();
+  if(name!=='points' && name!=='point') stopGPS();   // GPS keeps running on a point screen so the app knows when you walk away
+  if(name!=='point') curPt=null;
   if(name!=='story') storyAudio.pause();
   if(name!=='intro' && name!=='points') introStop();
   if(name!=='point') ptAudio.pause();
@@ -306,6 +379,39 @@ function go(name){
   saveResume();
   if(name==='points') startGPS();
 }
+/* ---------- History: every screen and pop-up you open is a layer, so the phone Back button peels them off one at a time ---------- */
+const SID=Math.random().toString(36).slice(2);
+const layers=[{type:'screen',name:'welcome'}];
+try{ history.replaceState({d:0,sid:SID},''); }catch(e){}
+function pushLayer(l){
+  const top=layers[layers.length-1];
+  if(top && top.closed){ layers.pop(); layers.push(l); try{ history.replaceState({d:layers.length-1,sid:SID},''); }catch(e){} return; }
+  layers.push(l); try{ history.pushState({d:layers.length-1,sid:SID},''); }catch(e){}
+}
+function layerIndex(name,type){ for(let i=layers.length-1;i>=0;i--) if(layers[i].name===name && (!type||layers[i].type===type) && !layers[i].closed) return i; return -1; }
+function rewindTo(i){ const n=layers.length-1-i; if(n>0){ try{ history.go(-n); }catch(e){} } }
+function openOverlay(name,close){ pushLayer({type:'overlay',name,close}); }
+function endOverlay(name,direct){ const i=layerIndex(name,'overlay'); if(i<0){ direct(); return; } rewindTo(i-1); }
+function dismissOverlay(name,direct){ direct(); const i=layerIndex(name,'overlay'); if(i>=0) layers[i].closed=true; }   // closed now; the next screen or pop-up reuses its history entry
+function go(name){
+  const ti=layerIndex(name,'screen');
+  if(ti===layers.length-1){ show(name); return; }
+  if(ti>=0){ rewindTo(ti); return; }                       // a screen we came from: step back to it (the popstate below shows it)
+  const top=layers[layers.length-1];
+  if(name==='options' && top.type==='screen' && top.name==='intro'){ layers.pop(); layers.push({type:'screen',name}); try{ history.replaceState({d:layers.length-1,sid:SID},''); }catch(e){} show(name); return; }
+  pushLayer({type:'screen',name}); show(name);
+}
+let ignoreNextPop=false;
+window.addEventListener('popstate',e=>{
+  if(ignoreNextPop){ ignoreNextPop=false; return; }
+  const st=e.state;
+  if(!st || st.sid!==SID){ try{ history.back(); }catch(x){} return; }   // an entry left over from before a reload: keep going back
+  if($('arModal').classList.contains('on') && layers[layers.length-1] && st.d<layers.length-1){   // the arrival pop-up (opened by GPS, not a tap) closes first
+    $('arModal').classList.remove('on'); ignoreNextPop=true; try{ history.go(1); }catch(x){} return;
+  }
+  while(layers.length-1>st.d){ const l=layers.pop(); try{ l.close&&l.close(); }catch(x){} }
+  const top=layers[layers.length-1]; if(top && top.type==='screen' && current!==top.name) show(top.name);
+});
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-go]'); if(b) go(b.dataset.go); });
 
 /* ============================================================
@@ -370,35 +476,33 @@ function startPlace(p){
   introIdx=0; go('intro'); introOn=true; introNext(true);
   // the map of Barbados appears while the general introduction plays
   const gm=$('introMap'); gm.style.display='none'; $('introMapNote').style.display='none';
-  gm.onload=()=>{ gm.style.display='block'; $('introMapNote').style.display='block'; };
-  gm.onerror=()=>{ gm.style.display='none'; log('general map missing',GENERAL_MAP); };
-  gm.src=GENERAL_MAP;
+  setPic(gm,GENERAL_MAP,{ratio:false}).then(ok=>{ if(ok){ gm.style.display='block'; $('introMapNote').style.display='block'; } else log('general map missing',GENERAL_MAP); });
 }
-$('introMap').onclick=()=>showMap(GENERAL_MAP,'Map of Barbados');
+$('introMap').onclick=()=>showMap(GENERAL_MAP);
 function introNext(first){
   if(!first) introIdx++;
   if(introIdx>=introQueue.length){ introDone(); return; }
   const it=introQueue[introIdx];
   $('introStep').textContent='WELCOME';
-  $('introNow').textContent=it.label; $('introBar').style.width='0%'; $('introPlay').textContent='Pause';
+  $('introNow').textContent=it.label; $('introBar').style.width='0%'; setPP('introPlay',true);
   audioFail(introAudio,it.label,null);
   introAudio.onerror=()=>{ log('AUDIO FAILED',it.src); $('introMsg').innerHTML='<div class="banner err">One of the introductions could not be loaded, so we skipped it.</div>'; introNext(); };
-  introAudio.src=it.src; introAudio.play().catch(err=>{ log('play blocked',err.name); $('introPlay').textContent='Play'; });
+  introAudio.src=it.src; introAudio.play().catch(err=>{ log('play blocked',err.name); setPP('introPlay',false); });
 }
 function introDone(){ introOn=false; $('introNow').textContent='Introduction finished'; $('introBar').style.width='100%'; openOptions(); }
 let introPlace=false;
 function introStop(){ introOn=false; introPlace=false; $('ptsIntro').style.display='none'; introAudio.pause(); }
 function playPlaceIntro(){
-  introPlace=true; $('ptsIntro').style.display='block'; $('ptsIntroBar').style.width='0%'; $('ptsIntroPlay').textContent='Pause';
+  introPlace=true; $('ptsIntro').style.display='block'; $('ptsIntroBar').style.width='0%'; setPP('ptsIntroPlay',true);
   introAudio.onerror=()=>{ log('AUDIO FAILED place intro',introAudio.src); introPlace=false; $('ptsIntro').style.display='none'; };
   introAudio.src=base(place)+'intro.mp3';
-  introAudio.play().catch(err=>{ log('intro play blocked',err.name); $('ptsIntroPlay').textContent='Play'; });
+  introAudio.play().catch(err=>{ log('intro play blocked',err.name); setPP('ptsIntroPlay',false); });
 }
 introAudio.onended=()=>{ if(introOn) introNext(); else if(introPlace){ introPlace=false; $('ptsIntro').style.display='none'; } };
 introAudio.ontimeupdate=()=>{ if(introAudio.duration){ const w=(100*introAudio.currentTime/introAudio.duration)+'%'; $('introBar').style.width=w; $('ptsIntroBar').style.width=w; } };
-$('ptsIntroPlay').onclick=()=>{ if(introAudio.paused){ introAudio.play(); $('ptsIntroPlay').textContent='Pause'; } else { introAudio.pause(); $('ptsIntroPlay').textContent='Play'; } };
+$('ptsIntroPlay').onclick=()=>{ if(introAudio.paused){ introAudio.play(); setPP('ptsIntroPlay',true); } else { introAudio.pause(); setPP('ptsIntroPlay',false); } };
 $('ptsIntroSkip').onclick=()=>{ introStop(); };
-$('introPlay').onclick=()=>{ if(introAudio.paused){ introAudio.play(); $('introPlay').textContent='Pause'; } else { introAudio.pause(); $('introPlay').textContent='Play'; } };
+$('introPlay').onclick=()=>{ if(introAudio.paused){ introAudio.play(); setPP('introPlay',true); } else { introAudio.pause(); setPP('introPlay',false); } };
 $('introSkip').onclick=()=>{ introAudio.pause(); introNext(); };
 $('introGo').onclick=()=>{ introStop(); openOptions(); };
 
@@ -415,32 +519,38 @@ $('optStory').onclick=()=>{ unlockAudio(); openStory(); };
 $('optAR').onclick=()=>{ unlockAudio(); openPointsScreen(); };
 function openPointsScreen(){
   $('ptsTitle').textContent=place.name.toUpperCase();
-  const m=$('ptsMap'); m.style.display='none'; m.onload=()=>{ m.style.display='block'; }; m.onerror=()=>{ m.style.display='none'; log('map missing',m.src); }; m.src=base(place)+'map.png';
+  loadTrailMap();
   go('points'); playPlaceIntro();
 }
+function loadTrailMap(){ const m=$('ptsMap'); m.style.display='none'; setPic(m,base(place)+'map.png').then(ok=>{ if(ok) m.style.display='block'; else log('map missing',base(place)+'map.png'); }); }
 $('ptsMap').onclick=()=>showMap();
 
 function showMap(srcOverride){
   const src=(typeof srcOverride==='string')?srcOverride:base(place)+'map.png';
-  const im=new Image(); im.onload=()=>{ const w=$('mapWrap'); if(w) w.remove();
+  const pic=document.createElement('div'); pic.className='gimg'; pic.style.cssText='margin-top:60px;border-radius:0;border:0';
+  setPic(pic,src).then(ok=>{
+    if(!ok){ toast('The map is not available yet.'); return; }
+    const w=$('mapWrap'); if(w){ w.remove(); const k=layerIndex('map','overlay'); if(k>=0) layers[k].closed=true; }
     const d=document.createElement('div'); d.id='mapWrap'; d.className='full on'; d.style.background='rgba(0,0,0,.92)'; d.style.overflow='auto';
-    d.innerHTML='<button class="fclose">Close</button><img src="'+src+'" style="width:100%;margin-top:60px">'; d.querySelector('button').onclick=()=>d.remove(); document.body.appendChild(d); };
-  im.onerror=()=>toast('The map is not available yet.'); im.src=src;
+    const rm=()=>{ const m=$('mapWrap'); if(m) m.remove(); };
+    d.innerHTML='<button class="fclose">Close</button>'; d.querySelector('button').onclick=()=>endOverlay('map',rm); d.appendChild(pic); document.body.appendChild(d);
+    openOverlay('map',rm);
+  });
 }
 
 /* ---------- Story ---------- */
 function openStory(){
   $('storyTitle').textContent=place.name; $('storyCredit').textContent=place.credit||''; $('storyMsg').innerHTML='';
-  $('storyPlay').textContent='Play'; $('storyBar').style.width='0%'; $('storyTime').textContent='0:00';
-  const art=$('storyArt'); art.style.display='none'; art.onload=()=>{ art.style.display='block'; }; art.onerror=()=>{ art.style.display='none'; log('story art missing',art.src); }; art.src=base(place)+'story/story.jpg';
+  setPP('storyPlay',false); $('storyBar').style.width='0%'; $('storyTime').textContent='0:00';
+  const art=$('storyArt'); art.style.display='none'; setPic(art,base(place)+'story/story.jpg',{ratio:false}).then(ok=>{ if(ok) art.style.display='block'; else log('story art missing',base(place)+'story/story.jpg'); });
   storyAudio.src=base(place)+'story.mp3'; audioFail(storyAudio,'story',$('storyMsg'));
-  go('story'); storyAudio.play().then(()=>$('storyPlay').textContent='Pause').catch(e=>log('story play blocked',e.name));
+  go('story'); storyAudio.play().then(()=>setPP('storyPlay',true)).catch(e=>log('story play blocked',e.name));
 }
-$('storyPlay').onclick=()=>{ if(storyAudio.paused){ storyAudio.play(); $('storyPlay').textContent='Pause'; } else { storyAudio.pause(); $('storyPlay').textContent='Play'; } };
+$('storyPlay').onclick=()=>{ if(storyAudio.paused){ storyAudio.play(); setPP('storyPlay',true); } else { storyAudio.pause(); setPP('storyPlay',false); } };
 $('storyBack').onclick=()=>{ storyAudio.currentTime=Math.max(0,storyAudio.currentTime-15); };
 $('storyFwd').onclick=()=>{ storyAudio.currentTime=Math.min(storyAudio.duration||1e9,storyAudio.currentTime+15); };
 storyAudio.ontimeupdate=()=>{ if(storyAudio.duration){ $('storyBar').style.width=(100*storyAudio.currentTime/storyAudio.duration)+'%'; $('storyTime').textContent=fmt(storyAudio.currentTime)+' / '+fmt(storyAudio.duration); } };
-storyAudio.onended=()=>{ $('storyPlay').textContent='Play'; };
+storyAudio.onended=()=>{ setPP('storyPlay',false); };
 
 /* ============================================================
    GEOFENCE
@@ -450,13 +560,14 @@ try{ visited=JSON.parse(localStorage.getItem('sankofaVisited')||'{}')||{}; }catc
 function saveVisited(){ try{ localStorage.setItem('sankofaVisited',JSON.stringify(visited)); }catch(e){} }
 function sim(){ return MODE==='desk'; }
 function startGPS(){
-  renderPoints(); $('ptsStatus').innerHTML='';
-  if(sim()){ onSim(); $('simPoint').onchange=onSim; return; }
+  renderPoints();
+  if(sim()){ $('ptsStatus').innerHTML=''; onSim(); $('simPoint').onchange=onSim; return; }
+  if(watchId!==null) return;   // already watching (for example, coming back from a point screen)
   if(!('geolocation' in navigator)){ $('ptsStatus').innerHTML='<div class="banner err">This device does not support location.</div>'; return; }
-  $('ptsStatus').innerHTML='<div class="banner">Finding your location&hellip;</div>';
+  FIXES.length=0; $('ptsStatus').innerHTML='<div class="banner">Finding your location&hellip;</div>';
   watchId=navigator.geolocation.watchPosition(onPos,onGPSErr,{enableHighAccuracy:true,maximumAge:2000,timeout:20000});
 }
-function stopGPS(){ if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; } }
+function stopGPS(){ if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; } FIXES.length=0; }
 function onGPSErr(e){
   const m={1:'Location is blocked. Allow location for this site in your browser settings, then reload.',2:'Your location is not available right now. Try moving to an open area.',3:'Finding your location is taking a while. Please wait or move to an open area.'}[e.code]||'Location error.';
   $('ptsStatus').innerHTML='<div class="banner err">'+m+'</div>'; log('GPS error',e.code);
@@ -467,26 +578,66 @@ function onSim(){
   $('ptsStatus').innerHTML='<div class="banner">Simulated location: '+pt.title+'</div>';
   lastPos={lat:pt.lat,lon:pt.lon,acc:5}; evaluate(lastPos,true);
 }
+/* Phone GPS wanders by several metres. We smooth it: the last few readings (about 12 s) are averaged, weighted by how
+   accurate each one claims to be, and readings that jump far from the others are ignored. */
+const FIXES=[];
+function smooth(f){
+  const now=Date.now();
+  if(FIXES.length){ const l=FIXES[FIXES.length-1]; if(haversine(l.lat,l.lon,f.lat,f.lon)>40) FIXES.length=0; }   // a big jump (you drove or the phone woke up elsewhere): start fresh
+  FIXES.push({lat:f.lat,lon:f.lon,acc:Math.max(f.acc||10,3),t:now});
+  while(FIXES.length && now-FIXES[0].t>12000) FIXES.shift();
+  while(FIXES.length>6) FIXES.shift();
+  let list=FIXES;
+  if(list.length>=3){
+    const med=arr=>arr.slice().sort((x,y)=>x-y)[Math.floor(arr.length/2)];
+    const ml=med(list.map(x=>x.lat)), mo=med(list.map(x=>x.lon));
+    const keep=list.filter(x=>haversine(ml,mo,x.lat,x.lon)<=Math.max(25,x.acc*2));
+    if(keep.length>=2) list=keep;
+  }
+  let W=0,la=0,lo=0,ac=0; list.forEach(x=>{ const w=1/(x.acc*x.acc); W+=w; la+=x.lat*w; lo+=x.lon*w; ac+=x.acc; });
+  return {lat:la/W,lon:lo/W,acc:ac/list.length};
+}
 function onPos(pos){
   const c=pos.coords; if(c.accuracy>GPS_ACCURACY_THRESHOLD_M){ $('ptsStatus').innerHTML='<div class="banner">Waiting for a stronger GPS signal (about '+Math.round(c.accuracy)+' m).</div>'; log('weak fix',Math.round(c.accuracy)); return; }
-  lastPos={lat:c.latitude,lon:c.longitude,acc:c.accuracy}; evaluate(lastPos,false);
+  lastPos=smooth({lat:c.latitude,lon:c.longitude,acc:c.accuracy}); evaluate(lastPos,false);
+}
+/* How close you must be to unlock a point (a bit wider when the GPS is weak), how far you may drift before it
+   closes again, and how far you must walk before the screen for that point is cleared. */
+function enterR(pt,acc){ return Math.max(pt.r||place.pointRadius, Math.min((acc||0)*0.9,22)); }
+function exitR(pt,acc){ return Math.max(22,enterR(pt,acc)*1.8); }
+function leaveR(pt,acc){ return Math.max(40,exitR(pt,acc)*1.6)*(pt._manual?3:1); }
+function moveOn(){
+  closeCamera(); closePano(); $('arModal').classList.remove('on'); $('unlockModal').classList.remove('on'); clearInterval(unlockTimer);
+  nearId=null; pending={id:null,count:0};
+  go(current==='point'?'points':current);
+  toast('You have moved on, so the AR points have refreshed.');
 }
 function evaluate(pos,instant){
   if(!pos){ nearId=null; renderPoints(); return; }
+  const acc=pos.acc||10;
   const dCenter=haversine(pos.lat,pos.lon,place.center.lat,place.center.lon);
   const inside=dCenter<=place.radius;
   let best=null,bd=1e9;
   place.points.forEach(pt=>{ pt._d=haversine(pos.lat,pos.lon,pt.lat,pt.lon); if(pt._d<bd){bd=pt._d;best=pt;} });
-  const candidate=(best&&bd<=place.pointRadius)?best.n:null;
+  // walked away from the point that is open: clear its screen, camera and 360 view so the next place starts fresh
+  const viewing=current==='point'||$('camView').classList.contains('on')||$('panView').classList.contains('on');
+  if(curPt && viewing && curPt._d>leaveR(curPt,acc)) moveOn();
+  if($('arModal').classList.contains('on') && arPt && arPt._d>leaveR(arPt,acc)) $('arModal').classList.remove('on');   // (not a history layer)
+  let candidate=null;
+  if(best && bd<=enterR(best,acc)) candidate=best.n;
+  else if(nearId){ const cur=place.points.find(x=>x.n===nearId); if(cur && cur._d<=exitR(cur,acc)) candidate=nearId; }   // stay unlocked while you drift a little
   if(instant||candidate===nearId){ pending={id:null,count:0}; nearId=candidate; }
   else if(pending.id===candidate){ if(++pending.count>=CONFIRM_READINGS_REQUIRED){ nearId=candidate; pending={id:null,count:0}; } }
   else pending={id:candidate,count:1};
   if(nearId && !visited[place.id+':'+nearId]){ visited[place.id+':'+nearId]=true; saveVisited(); }
-  place.points.forEach(pt=>{ if(pt._d>place.pointRadius+15) prompted[place.id+':'+pt.n]=false; });
+  place.points.forEach(pt=>{ if(pt._d>exitR(pt,acc)+5) prompted[place.id+':'+pt.n]=false; });
   if(nearId && !prompted[place.id+':'+nearId]){ prompted[place.id+':'+nearId]=true; arrive(place.points.find(x=>x.n===nearId)); }
   $('ptsStatus').innerHTML=nearId?'':( inside
     ? '<div class="banner">You are on the trail. The nearest AR point is about '+Math.round(bd)+' m away.</div>'
     : '<div class="banner">You are about '+Math.round(dCenter-place.radius)+' m outside the trail area. Head to the first point to begin.</div>');
+  // "I'm here but it won't unlock": offered only when the phone says you are fairly close
+  const ub=$('unlockBtn'); const showU=!sim() && !nearId && best && bd<=80 && current==='points';
+  ub.style.display=showU?'block':'none'; ub.dataset.n=showU?best.n:'';
   renderPoints();
 }
 function renderPoints(){
@@ -494,65 +645,142 @@ function renderPoints(){
   place.points.forEach(pt=>{
     const near=nearId===pt.n, seen=visited[place.id+':'+pt.n], open=near||seen;
     const el=document.createElement('button'); el.className='card';
-    el.innerHTML='<div class="row"><img class="logoMark" src="images/logo-mark.png" alt="" onerror="this.style.display=\'none\'"><div style="flex:1"><h3>AR Point</h3><p style="margin:2px 0 0">'+(near?'You are here':seen?'Visited':(pt._d!=null?Math.round(pt._d)+' m away':'Not reached yet'))+'</p></div><span class="tag '+(near?'near':'')+'">'+(near?'OPEN':seen?'VISITED':'LOCKED')+'</span></div>';
+    el.innerHTML='<div class="row"><div class="logoMark" role="img" aria-label="Sankofa Trails"></div><div style="flex:1"><h3>AR Point</h3><p style="margin:2px 0 0">'+(pt.views&&pt.views.length>1?pt.views.length+' AR views \u00B7 ':'')+(near?'You are here':seen?'Visited':(pt._d!=null?Math.round(pt._d)+' m away':'Not reached yet'))+'</p></div><span class="tag '+(near?'near':'')+'">'+(near?'OPEN':seen?'VISITED':'LOCKED')+'</span></div>';
     el.onclick=()=>{ if(open) openPoint(pt); else toast('Walk to this point to unlock it.'); };
     if(!open) el.style.opacity=.6;
     L.appendChild(el);
   });
 }
+/* ---------- manual unlock (a short wait and a confirmation, so it is not tapped by accident) ---------- */
+let unlockTimer=null;
+$('unlockBtn').onclick=()=>{
+  const pt=place.points.find(x=>String(x.n)===$('unlockBtn').dataset.n); if(!pt) return;
+  $('unlockText').textContent='Only unlock it if you are standing at the AR point. The nearest one is about '+Math.round(pt._d)+' m from where your phone thinks you are.';
+  const yes=$('unlockYes'); yes.disabled=true; let left=4; yes.textContent='Please wait '+left+'…';
+  clearInterval(unlockTimer); unlockTimer=setInterval(()=>{ left--; if(left<=0){ clearInterval(unlockTimer); yes.disabled=false; yes.textContent='Yes, unlock it'; } else yes.textContent='Please wait '+left+'…'; },1000);
+  $('unlockModal').dataset.n=pt.n; $('unlockModal').classList.add('on'); openOverlay('unlock',closeUnlock);
+};
+function closeUnlock(){ clearInterval(unlockTimer); $('unlockModal').classList.remove('on'); }
+$('unlockNo').onclick=()=>endOverlay('unlock',closeUnlock);
+$('unlockYes').onclick=()=>{
+  dismissOverlay('unlock',closeUnlock);
+  const pt=place.points.find(x=>String(x.n)===$('unlockModal').dataset.n); if(!pt) return;
+  pt._manual=true; visited[place.id+':'+pt.n]=true; saveVisited(); nearId=pt.n; prompted[place.id+':'+pt.n]=true; log('manual unlock',pt.n);
+  renderPoints(); arrive(pt);
+};
 
 /* ============================================================
    POINT SCREEN
    ============================================================ */
 let curPt=null;
 function exists(url){ return fetch(url,{method:'HEAD'}).then(r=>r.ok).catch(()=>false); }
-async function openPoint(pt,auto){
+/* a swipe gallery: one picture per slide, each keeps its own shape; dots, arrows and a counter */
+function buildGallery(srcs,label){
+  const wrap=document.createElement('div'); wrap.className='gal';
+  const track=document.createElement('div'); track.className='galTrack'; wrap.appendChild(track);
+  const bar=document.createElement('div'); bar.className='galBar';
+  const prev=document.createElement('button'); prev.className='arrow'; prev.textContent='‹'; prev.setAttribute('aria-label','Previous picture');
+  const dots=document.createElement('div'); dots.className='galDots';
+  const next=document.createElement('button'); next.className='arrow'; next.textContent='›'; next.setAttribute('aria-label','Next picture');
+  const cnt=document.createElement('span'); cnt.className='mono';
+  bar.append(prev,dots,cnt,next); wrap.appendChild(bar);
+  let n=0;
+  const upd=()=>{ const i=Math.round(track.scrollLeft/Math.max(1,track.clientWidth)); [...dots.children].forEach((d,k)=>d.classList.toggle('on',k===i)); cnt.textContent=(i+1)+' / '+n; };
+  track.onscroll=upd;
+  prev.onclick=()=>track.scrollBy({left:-track.clientWidth,behavior:'smooth'});
+  next.onclick=()=>track.scrollBy({left:track.clientWidth,behavior:'smooth'});
+  srcs.forEach((src,i)=>{
+    const slide=document.createElement('div'); slide.className='galSlide';
+    const pic=document.createElement('div'); pic.className='pic'; pic.setAttribute('role','img'); pic.setAttribute('aria-label',(label||'Photo')+' '+(i+1));
+    slide.appendChild(pic);
+    setPic(pic,src).then(ok=>{ if(!ok){ slide.remove(); log('photo missing',src); } else { track.appendChild(slide); dots.appendChild(document.createElement('i')); n++; bar.style.display=n>1?'flex':'none'; upd(); } });
+  });
+  bar.style.display='none';
+  return wrap;
+}
+async function openPoint(pt,mode){
   curPt=pt; const a=pointAssets(place,pt);
   $('ptTitle').textContent='AR Point'; $('ptHint').textContent=pt.hint||'';
-  $('ptPics').innerHTML=''; $('ptActions').innerHTML=''; $('ptAudioBox').style.display='none'; $('ptBar').style.width='0%'; $('ptPlay').textContent='Play';
+  $('ptPics').innerHTML=''; $('ptActions').innerHTML=''; $('ptAudioBox').style.display='none'; $('ptBar').style.width='0%'; setPP('ptPlay',false);
   go('point');
-  // photos (a/b are shown as separate pictures with a short label)
-  a.photos.forEach((src,i)=>{ const im=new Image(); im.className='pic'; im.alt=pt.title+' photo'; im.onload=()=>{ const w=document.createElement('div'); if(pt.options){ const t=document.createElement('p'); t.className='mono'; t.textContent='VIEW '+pt.options[i].toUpperCase(); w.appendChild(t);} w.appendChild(im); $('ptPics').appendChild(w); }; im.onerror=()=>log('photo missing',src); im.src=src; });
+  const myPt=pt;
   // audio
-  if(await exists(a.audio)){ $('ptAudioBox').style.display='block'; ptAudio.src=a.audio; audioFail(ptAudio,'point',null); ptAudio.play().then(()=>$('ptPlay').textContent='Pause').catch(()=>{}); }
-  // actions: AR pictures open the camera (overlays/ first, then photos/); 360 scenes open the viewer
+  const vi=(/^ar(\d+)$/.exec(mode||'')||[0,0])[1]|0;   // which view of a folder was chosen
+  const audioUrl=a.views.length?(a.views[vi]||a.views[0]).audio:a.audio;
+  if(await exists(audioUrl)){ if(curPt!==myPt) return; $('ptAudioBox').style.display='block'; ptAudio.src=audioUrl; audioFail(ptAudio,'point',null); ptAudio.play().then(()=>setPP('ptPlay',true)).catch(()=>{}); }
+  let overlay=null; const viewSrc=[];
+  if(pt.views){ for(const v of a.views){ let f=null; for(const u of [...v.vids,v.overlay,v.photo]){ if(await exists(u)){ f=u; break; } } viewSrc.push(f); } overlay=viewSrc.find(x=>x)||null; }
+  else if(pt.ar){ if(await exists(a.overlay)) overlay=a.overlay; else if(!pt.options && !pt.gallery && await exists(a.photo)) overlay=a.photo; }
+  if(curPt!==myPt) return;
   if(pt.ar){
-    let src=null;
-    if(await exists(a.overlay)) src=a.overlay; else if(!pt.options && await exists(a.photo)) src=a.photo;
-    if(src){ addAction('Open camera',()=>openCamera(src)); if(auto) openCamera(src); }
-    else { const n=document.createElement('p'); n.textContent='The AR view for this point is coming soon.'; $('ptActions').appendChild(n); }
+    if(overlay){
+      if(pt.views && pt.views.length>1) viewSrc.forEach((src,i)=>{ if(src) addAction('Open camera \u2013 View '+'ABCDEFGH'[i],()=>{ if(i!==vi||true){ ptAudio.src=a.views[i].audio; setPP('ptPlay',false); } openCamera(src); }); });
+      else addAction('Open camera',()=>openCamera(overlay));
+      const t=document.createElement('p'); t.className='mono'; t.style.color='var(--coral)'; t.textContent='TIP: TURN YOUR PHONE SIDEWAYS (LANDSCAPE)'; $('ptActions').appendChild(t);
+    } else { const n=document.createElement('p'); n.textContent='The AR view for this point is coming soon.'; $('ptActions').appendChild(n); }
   }
-  if(pt.panorama && await exists(a.pano)){ addAction('Look around in 360°',()=>openPano(a.pano)); if(auto) openPano(a.pano); }
+  if(pt.panorama && await exists(a.pano)){ addAction('Look around in 360°',()=>openPano(a.pano)); }
+  // pictures: a gallery for several photos, one picture otherwise
+  if(pt.gallery){ $('ptPics').appendChild(buildGallery(a.gallery,pt.title)); }
+  else if(pt.options){
+    const box=document.createElement('div'); box.style.display=(mode==='maps')?'block':'none';
+    box.appendChild(buildGallery(a.maps,'Map'));
+    $('ptPics').appendChild(box);
+    const b=document.createElement('button'); b.className='btn ghost'; b.textContent=(mode==='maps')?'Hide the maps':'View the maps';
+    b.onclick=()=>{ const show=box.style.display==='none'; box.style.display=show?'block':'none'; b.textContent=show?'Hide the maps':'View the maps'; };
+    $('ptActions').appendChild(b);
+  }
+  else if(!pt.ar && !pt.panorama){ $('ptPics').appendChild(buildGallery([a.photo],pt.title)); }
+  if(/^ar\d+$/.test(mode||'') && viewSrc[vi]) openCamera(viewSrc[vi]);
+  else if(mode==='ar' && overlay) openCamera(overlay);
+  else if(mode==='ar' && pt.panorama) openPano(a.pano);
 }
 /* ---------- Arriving at an AR point ---------- */
 let arPt=null;
 function arrive(pt){
-  if(!pt||current!=='points') return; arPt=pt; chime();
-  $('arText').textContent=pt.panorama?'Open the 360\u00B0 view to look around this place.':'Open your camera to see the past and the future laid over this place.';
-  $('arGo').textContent=pt.panorama?'Open 360\u00B0 view':'Open camera';
+  if(!pt||(current!=='points'&&current!=='point')) return; arPt=pt; chime(); try{ navigator.vibrate&&navigator.vibrate([120,60,120]); }catch(e){}
+  if(pt.views && pt.views.length>2){
+    $('arText').textContent='This spot is a folder of '+pt.views.length+' AR views. Choose the one you want to see.';
+    $('arGo').textContent='Choose an AR view'; $('arAlt').style.display='none';
+  } else if(pt.views && pt.views.length>1){
+    $('arText').textContent='This spot has two AR views. Which would you like first?';
+    $('arGo').textContent='Open AR view A'; $('arAlt').style.display='block'; $('arAlt').textContent='Open AR view B';
+  } else if(pt.options){
+    $('arText').textContent='This spot has two things to see. Which would you like first?';
+    $('arGo').textContent='Open the AR camera'; $('arAlt').style.display='block'; $('arAlt').textContent='See the maps';
+  } else {
+    $('arText').textContent=pt.panorama?'Open the 360° view to look around this place.':'Open your camera to see the past and the future laid over this place.';
+    $('arGo').textContent=pt.panorama?'Open 360° view':'Open camera'; $('arAlt').style.display='none';
+  }
+  $('arTip').style.display=pt.panorama?'none':'block';
   $('arModal').classList.add('on');
 }
-$('arGo').onclick=()=>{ $('arModal').classList.remove('on'); if(arPt) openPoint(arPt,true); };
+$('arGo').onclick=()=>{ $('arModal').classList.remove('on'); if(arPt) openPoint(arPt,(arPt.views&&arPt.views.length>2)?undefined:'ar'); };
+$('arAlt').onclick=()=>{ $('arModal').classList.remove('on'); if(arPt) openPoint(arPt,(arPt.views&&arPt.views.length>1)?'ar1':'maps'); };
 $('arLater').onclick=()=>$('arModal').classList.remove('on');
 function addAction(label,fn){ const b=document.createElement('button'); b.className='btn primary'; b.textContent=label; b.onclick=fn; $('ptActions').appendChild(b); }
-$('ptPlay').onclick=()=>{ if(ptAudio.paused){ ptAudio.play(); $('ptPlay').textContent='Pause'; } else { ptAudio.pause(); $('ptPlay').textContent='Play'; } };
+$('ptPlay').onclick=()=>{ if(ptAudio.paused){ ptAudio.play(); setPP('ptPlay',true); } else { ptAudio.pause(); setPP('ptPlay',false); } };
 ptAudio.ontimeupdate=()=>{ if(ptAudio.duration) $('ptBar').style.width=(100*ptAudio.currentTime/ptAudio.duration)+'%'; };
-ptAudio.onended=()=>{ $('ptPlay').textContent='Play'; };
+ptAudio.onended=()=>{ setPP('ptPlay',false); };
 
 /* ============================================================
    CAMERA OVERLAY (opens only on tap)
    ============================================================ */
 let camStream=null;
 async function openCamera(src){
-  ptAudio.pause();
+  ptAudio.pause(); setPP('ptPlay',false);
   try{
     camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
   }catch(e){ log('camera denied',e.name); toast('Camera permission is needed for this view. Allow it in your browser settings.'); return; }
-  $('camVid').srcObject=camStream; $('camOv').src=src; $('camOpacity').value=50; $('camOv').style.opacity=.5;
-  $('camView').classList.add('on');
+  $('camVid').srcObject=camStream; $('camOpacity').value=50;
+  const ov=$('camOvVid'), isVid=/\.mp4$/i.test(src);
+  if(isVid){ $('camOv').style.backgroundImage='none'; ov.src=src; ov.classList.add('on'); ov.style.opacity=.5; ov.currentTime=0; ov.play().catch(()=>{}); }
+  else { ov.classList.remove('on'); $('camOv').style.backgroundImage='url("'+src+'")'; $('camOv').style.opacity=.5; }
+  $('camView').classList.add('on'); openOverlay('cam',closeCamera);
 }
-$('camOpacity').oninput=e=>{ $('camOv').style.opacity=e.target.value/100; };
-$('camClose').onclick=()=>{ $('camView').classList.remove('on'); if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; } $('camVid').srcObject=null; };
+function closeCamera(){ $('camView').classList.remove('on'); if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; } $('camVid').srcObject=null; $('camOv').style.backgroundImage='none'; const ov=$('camOvVid'); ov.pause(); ov.classList.remove('on'); ov.removeAttribute('src'); ov.load(); }
+$('camOpacity').oninput=e=>{ $('camOv').style.opacity=e.target.value/100; $('camOvVid').style.opacity=e.target.value/100; };
+$('camClose').onclick=()=>endOverlay('cam',closeCamera);
 
 /* ============================================================
    360 VIEWER (WebGL equirectangular; phone motion or drag)
@@ -566,7 +794,7 @@ async function openPano(src){
   } else pano.useSensors=('DeviceOrientationEvent' in window);
   const img=new Image();
   img.onerror=()=>toast('Could not load the 360° picture.');
-  img.onload=()=>{ $('panView').classList.add('on'); initPano(img); };
+  img.onload=()=>{ $('panView').classList.add('on'); openOverlay('pano',closePano); initPano(img); };
   img.src=src;
 }
 function initPano(img){
@@ -581,13 +809,13 @@ function initPano(img){
   const pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs)); gl.linkProgram(pr); gl.useProgram(pr); pano.prog=pr;
   const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
   const loc=gl.getAttribLocation(pr,'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
-  // downscale if the picture is larger than the phone allows
-  const max=gl.getParameter(gl.MAX_TEXTURE_SIZE); let src=img;
-  if(img.width>max){ const c=document.createElement('canvas'); c.width=max; c.height=Math.round(img.height*max/img.width); c.getContext('2d').drawImage(img,0,0,c.width,c.height); src=c; }
+  // WebGL1 only accepts power-of-two pictures with clamped edges, so draw the picture onto a 2048 x 1024 canvas first
+  const max=gl.getParameter(gl.MAX_TEXTURE_SIZE); const W=Math.min(2048,max), H=W/2;
+  const c=document.createElement('canvas'); c.width=W; c.height=H; c.getContext('2d').drawImage(img,0,0,W,H);
   const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,src);
-  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,c);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
   pano.tex=tex; pano.yaw=0; pano.pitch=0; pano.orient=null;
   resizePano(); window.addEventListener('resize',resizePano);
@@ -633,11 +861,12 @@ function drawPano(){
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   pano.raf=requestAnimationFrame(drawPano);
 }
-$('panClose').onclick=()=>{
+function closePano(){
   $('panView').classList.remove('on'); cancelAnimationFrame(pano.raf);
   window.removeEventListener('deviceorientation',onOrient,true); window.removeEventListener('resize',resizePano);
   if(pano.gl){ const e=pano.gl.getExtension('WEBGL_lose_context'); e&&e.loseContext(); } pano.gl=null;
-};
+}
+$('panClose').onclick=()=>endOverlay('pano',closePano);
 
 /* ============================================================
    START
@@ -660,7 +889,7 @@ document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState!=='visible') return;
   keepAwake(current==='points'||current==='point'||current==='story');
   // GPS is paused by the phone while the page is hidden: restart it, but keep what we already know
-  if(current==='points'){ stopGPS(); pending={id:null,count:0}; startGPS(); log('returned to app, GPS restarted'); }
+  if(current==='points'||current==='point'){ stopGPS(); pending={id:null,count:0}; startGPS(); log('returned to app, GPS restarted'); }
 });
 function resume(){
   try{
@@ -673,8 +902,8 @@ function resume(){
 }
 function openPointsScreenResume(){
   $('ptsTitle').textContent=place.name.toUpperCase();
-  const m=$('ptsMap'); m.onload=()=>{ m.style.display='block'; }; m.onerror=()=>{ m.style.display='none'; }; m.src=base(place)+'map.png';
-  go('points'); toast('Welcome back');
+  loadTrailMap();
+  pushLayer({type:'screen',name:'options'}); go('points'); toast('Welcome back');
 }
 
 /* ---------- Mark this spot (testing mode): averages GPS readings for 30 s ---------- */
@@ -699,23 +928,7 @@ function markSpot(){
 }
 $('markBtn').onclick=markSpot;
 
-/* ---------- Phone Back button ---------- */
-const BACK_PARENT={intro:'welcome',options:'welcome',story:'options',points:'options',point:'points'};
-let lastBackAt=0, armed=false;
-function arm(){ try{ history.pushState({s:'app'},''); }catch(e){} }
-// Armed on the first tap (browsers ignore history entries made before any interaction).
-document.addEventListener('click',()=>{ if(!armed){ armed=true; try{ history.replaceState({s:'base'},''); }catch(e){} arm(); } },true);
-window.addEventListener('popstate',()=>{
-  if(!armed) return;
-  if($('arModal').classList.contains('on')){ $('arModal').classList.remove('on'); arm(); return; }
-  if($('camView').classList.contains('on')){ $('camClose').click(); arm(); return; }
-  if($('panView').classList.contains('on')){ $('panClose').click(); arm(); return; }
-  const mw=$('mapWrap'); if(mw){ mw.remove(); arm(); return; }
-  if(BACK_PARENT[current]){ go(BACK_PARENT[current]); arm(); return; }
-  const now=Date.now();
-  if(now-lastBackAt<2500){ armed=false; history.back(); return; }
-  lastBackAt=now; toast('Press back again to leave'); arm();
-});
+/* Phone Back button: handled by the history layers above. */
 
 buildWelcome();
 /* ---------- Testing mode (only for people who opened the link with ?dev) ---------- */
@@ -724,6 +937,8 @@ const DEV_CODE='';
 (function(){ const q=new URLSearchParams(location.search), want=DEV_CODE||'1';
   const okParam=q.has('dev') && (DEV_CODE==='' || q.get('dev')===DEV_CODE);
   try{ if(okParam) localStorage.setItem('sankofaDev',want); DEV=localStorage.getItem('sankofaDev')===want; }catch(e){ DEV=okParam; } })();
+DEV_FLAG=DEV;
+PLACES.forEach(p=>{ if(p.devOnly) p.soon=!DEV; }); buildWelcome();
 try{ if(DEV){ const m=localStorage.getItem('sankofaMode'); if(m==='desk'||m==='field') MODE=m; } }catch(e){}
 function refreshMode(){
   $('modeName').textContent={public:'Public',desk:'Desk test',field:'Field test'}[MODE];
