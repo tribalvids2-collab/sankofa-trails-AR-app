@@ -59,7 +59,7 @@ button.card{cursor:pointer}
 .bar>i{display:block;height:100%;width:0;background:var(--coral)}
 .ctl{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:10px}
 .ctl .btn{width:auto;padding:12px 16px}
-.pic{width:100%;border-radius:14px;margin-top:12px;display:block;border:1px solid var(--line)}
+.pic{width:100%;border-radius:14px;margin-top:12px;display:block;border:1px solid var(--line);background:center/100% 100% no-repeat;-webkit-touch-callout:none}
 .banner{background:rgba(20,38,39,.97);border:1px solid var(--coral-dim);color:var(--text);border-radius:12px;padding:12px 14px;margin:10px 0;font-size:.9rem;line-height:1.45}
 .banner.err{border-color:var(--danger)}
 .notice{font-size:.78rem;color:var(--text-faint);margin-top:18px;line-height:1.5}
@@ -78,6 +78,7 @@ button.card{cursor:pointer}
 /* pictures are drawn as backgrounds (not img tags) so there is no "save image" menu, and nothing can be dragged out */
 body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .dev,.dev *{-webkit-user-select:text;user-select:text}
+@media print{body{display:none!important}}
 .gimg{width:100%;border-radius:14px;border:1px solid var(--line);background:center/100% 100% no-repeat;display:block;-webkit-touch-callout:none}
 .gal{position:relative;margin-top:12px}
 .galTrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -228,7 +229,7 @@ body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 <div class="full" id="camView">
   <video id="camVid" playsinline muted autoplay></video>
   <div class="ovimg" id="camOv" role="img" aria-label=""></div>
-  <video class="ovvid" id="camOvVid" playsinline loop preload="auto"></video>
+  <video class="ovvid" id="camOvVid" playsinline loop preload="auto" controlsList="nodownload noremoteplayback" disablePictureInPicture disableRemotePlayback></video>
   <div class="fhint" id="camHint">Turn your phone sideways (landscape), then line the picture up with the view in front of you.</div>
   <button class="fclose" id="camClose">Close</button>
   <div class="fbar"><input type="range" id="camOpacity" min="0" max="100" value="50" aria-label="Now and then"><div class="lever"><span>NOW</span><span>THEN</span></div></div>
@@ -286,32 +287,37 @@ const PLACES = [
       {n:1,title:'Point 1',lat:13.119968,lon:-59.568932,ar:true},
       {n:2,title:'Point 2',lat:13.120894,lon:-59.565876,ar:true},
       /* point 3 was 13.120466,-59.563278 (in the bush); now from the field-test photo GPS */
-      {n:3,title:'Point 3',lat:13.120852,lon:-59.564350,panorama:true},
-      {n:4,title:'Point 4',lat:13.120797,lon:-59.562812,ar:true,gallery:['','b'],r:16}
+      {n:3,title:'Point 3',lat:13.120834,lon:-59.564031,panorama:true},
+      {n:4,title:'Point 4',lat:13.120832,lon:-59.562881,ar:true,gallery:['','b'],r:16}
     ]},
   /* Tent Bay and Joe's River are switched on for testers only (open the link with ?dev). Everyone else sees "Coming soon".
      Tent Bay: points still incomplete and may be redone; outer zone is provisional until all points are final.
      Joe's River: point 1 still to be confirmed; outer zone provisional. 'views' = the pictures (and audio) at one point, shown as View A / View B. */
   { id:'tentbay', name:'Tent Bay', alt:'Bathsheba', devOnly:true, soon:true,
-    center:{lat:13.212034, lon:-59.517328}, radius:380, pointRadius:10,
+    center:{lat:13.212034, lon:-59.517328}, radius:440, pointRadius:10,
     points:[
-      /* 2026-11-07: points picked from Google Maps by the user. Spots that sit within a few metres of each other are
-         one "folder" (views:[...]): one trigger, and the visitor chooses which AR view to open.
-         Folder 1 = old points 1 and 2 (4 m apart); folder 5 = old points 6 and 7 (about 10 m apart). */
-      {n:1,title:'Point 1',lat:13.211325,lon:-59.514515,ar:true,views:['point-1','point-2']},
-      {n:2,title:'Point 2',lat:13.211524,lon:-59.514852,ar:true,views:['point-3']},
-      {n:3,title:'Point 3',lat:13.211803,lon:-59.515428,ar:true,views:['point-4']},
-      {n:4,title:'Point 4',lat:13.211870,lon:-59.518713,ar:true,views:['point-5']},
-      {n:5,title:'Point 5',lat:13.212767,lon:-59.520135,ar:true,views:['point-6','point-7']}
+      /* 2026-11-10: user's list. Folder 1 (point-1 + point-2, 4 m apart) stays at its spot. The user added a NEW extra trigger at
+         13.211100,-59.513763 (about 85 m east, where the walk starts) that shows the same AR picture as point-1. Old folder 5 was
+         split earlier the same day when point 6 moved to the buildings across the street. Seven triggers, eight views.
+         Zone radius raised 380 -> 440 m so the new first trigger is inside it (zone still provisional). */
+      {n:1,title:'Point 1',lat:13.211100,lon:-59.513763,ar:true,views:['point-1']},
+      {n:2,title:'Point 2',lat:13.211325,lon:-59.514515,ar:true,views:['point-1','point-2']},
+      {n:3,title:'Point 3',lat:13.211524,lon:-59.514852,ar:true,views:['point-3']},
+      {n:4,title:'Point 4',lat:13.211803,lon:-59.515428,ar:true,views:['point-4']},
+      {n:5,title:'Point 5',lat:13.211870,lon:-59.518713,ar:true,views:['point-5']},
+      {n:6,title:'Point 6',lat:13.212381,lon:-59.519028,ar:true,views:['point-6']},
+      {n:7,title:'Point 7',lat:13.212791,lon:-59.520172,ar:true,views:['point-7']}
     ]},
   { id:'joesriver', name:"Joe's River", devOnly:true, soon:true,
     center:{lat:13.216024, lon:-59.526703}, radius:180, pointRadius:10,
     points:[
-      /* 2026-11-07: points picked from Google Maps by the user. Points 2 and 3 were given the same spot, so they are one folder (two AR views). */
-      {n:1,title:'Point 1',lat:13.216471,lon:-59.527599,ar:true,views:['point-1']},
-      {n:2,title:'Point 2',lat:13.216454,lon:-59.527432,ar:true,views:['point-2','point-3']},
-      {n:3,title:'Point 3',lat:13.216421,lon:-59.527063,ar:true,views:['point-4']},
-      {n:4,title:'Point 4',lat:13.215577,lon:-59.525806,ar:true,views:['point-5']}
+      /* 2026-11-10: coordinates from the user. Naming rule: trigger number first, then a letter for each extra view
+         (point-1 + point-1b = one trigger with two AR views; a view with no audio of its own plays the trigger's audio). */
+      {n:1,title:'Point 1',lat:13.216469,lon:-59.527530,ar:true,views:['point-1','point-1b']},
+      {n:2,title:'Point 2',lat:13.216449,lon:-59.527386,ar:true},
+      {n:3,title:'Point 3',lat:13.216304,lon:-59.526738,ar:true},
+      {n:4,title:'Point 4',lat:13.216604,lon:-59.527368,ar:true},
+      {n:5,title:'Point 5',lat:13.215568,lon:-59.525796,ar:true}
     ]}
 ];
 const GPS_ACCURACY_THRESHOLD_M = 50;
@@ -339,6 +345,11 @@ setPP('introPlay',true); setPP('ptsIntroPlay',true); setPP('storyPlay',false); s
 let DEV_FLAG=false;
 document.addEventListener('contextmenu',e=>{ if(!DEV_FLAG) e.preventDefault(); });
 document.addEventListener('dragstart',e=>e.preventDefault());
+/* extra deterrents (outside ?dev): no printing, no save/print shortcuts, no copying. A browser cannot stop a phone screenshot or a screen recording. */
+document.addEventListener('copy',e=>{ if(!DEV_FLAG) e.preventDefault(); });
+document.addEventListener('cut',e=>{ if(!DEV_FLAG) e.preventDefault(); });
+document.addEventListener('keydown',e=>{ if(DEV_FLAG) return; const k=(e.key||'').toLowerCase(); if((e.ctrlKey||e.metaKey)&&(k==='s'||k==='p'||k==='u')) e.preventDefault(); });
+
 const log = (...a)=>{ try{ console.log('[sankofa]',...a); const d=$('devLog'); d.textContent=(new Date().toLocaleTimeString()+' '+a.join(' ')+'\n'+d.textContent).slice(0,900);}catch(e){} };
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(toast._t); toast._t=setTimeout(()=>t.style.display='none',3200); }
 function haversine(lat1,lon1,lat2,lon2){
@@ -698,6 +709,19 @@ function buildGallery(srcs,label){
   bar.style.display='none';
   return wrap;
 }
+/* the phone-turn tip depends on the pictures: landscape pictures -> turn sideways; portrait -> keep upright; a mix -> match the picture */
+function picShape(src){ return new Promise(res=>{ if(/\.mp4$/i.test(src)) return res('l'); const im=new Image(); im.onload=()=>res(im.naturalHeight>im.naturalWidth?'p':'l'); im.onerror=()=>res(null); im.src=src; }); }
+async function tipFor(pt){
+  const a=pointAssets(place,pt); let cands=[];
+  if(pt.views){ for(const v of a.views){ for(const u of [...v.vids,v.overlay,v.photo]){ if(await exists(u)){ cands.push(u); break; } } } }
+  else if(pt.gallery){ for(const g of a.gallery){ if(await exists(g)) cands.push(g); } }
+  else if(await exists(a.overlay)) cands.push(a.overlay); else if(await exists(a.photo)) cands.push(a.photo);
+  const shapes=(await Promise.all(cands.map(picShape))).filter(Boolean);
+  if(!shapes.length) return 'TIP: TURN YOUR PHONE SIDEWAYS (LANDSCAPE) FOR THE BEST VIEW';
+  if(shapes.every(x=>x==='p')) return 'TIP: KEEP YOUR PHONE UPRIGHT (PORTRAIT) FOR THE BEST VIEW';
+  if(shapes.every(x=>x==='l')) return 'TIP: TURN YOUR PHONE SIDEWAYS (LANDSCAPE) FOR THE BEST VIEW';
+  return 'TIP: TURN YOUR PHONE TO MATCH THE PICTURE, UPRIGHT OR SIDEWAYS';
+}
 async function openPoint(pt,mode){
   curPt=pt; const a=pointAssets(place,pt);
   $('ptTitle').textContent='AR Point'; $('ptHint').textContent=pt.hint||'';
@@ -706,17 +730,19 @@ async function openPoint(pt,mode){
   const myPt=pt;
   // audio
   const vi=(/^ar(\d+)$/.exec(mode||'')||[0,0])[1]|0;   // which view of a folder was chosen
-  const audioUrl=a.views.length?(a.views[vi]||a.views[0]).audio:a.audio;
+  const viewAudio=[]; for(const v of a.views){ viewAudio.push(await exists(v.audio)?v.audio:a.audio); }   // a view with no audio of its own plays the trigger's audio
+  const audioUrl=a.views.length?(viewAudio[vi]||viewAudio[0]):a.audio;
   if(await exists(audioUrl)){ if(curPt!==myPt) return; $('ptAudioBox').style.display='block'; ptAudio.src=audioUrl; audioFail(ptAudio,'point',null); ptAudio.play().then(()=>setPP('ptPlay',true)).catch(()=>{}); }
   let overlay=null; const viewSrc=[];
   if(pt.views){ for(const v of a.views){ let f=null; for(const u of [...v.vids,v.overlay,v.photo]){ if(await exists(u)){ f=u; break; } } viewSrc.push(f); } overlay=viewSrc.find(x=>x)||null; }
-  else if(pt.ar){ if(await exists(a.overlay)) overlay=a.overlay; else if(!pt.options && !pt.gallery && await exists(a.photo)) overlay=a.photo; }
+  else if(pt.ar){ if(await exists(a.overlay)) overlay=a.overlay; else if(pt.gallery){ for(const g of a.gallery){ if(await exists(g)) viewSrc.push(g); } overlay=viewSrc[0]||null; } else if(!pt.options && await exists(a.photo)) overlay=a.photo; }
   if(curPt!==myPt) return;
   if(pt.ar){
     if(overlay){
-      if(pt.views && pt.views.length>1) viewSrc.forEach((src,i)=>{ if(src) addAction('Open camera \u2013 View '+'ABCDEFGH'[i],()=>{ if(i!==vi||true){ ptAudio.src=a.views[i].audio; setPP('ptPlay',false); } openCamera(src); }); });
+      if(pt.views && pt.views.length>1) viewSrc.forEach((src,i)=>{ if(src) addAction('Open camera \u2013 View '+'ABCDEFGH'[i],()=>{ if(i!==vi||true){ ptAudio.src=viewAudio[i]; setPP('ptPlay',false); } openCamera(src); }); });
+      else if(pt.gallery && viewSrc.length>1) viewSrc.forEach((src,i)=>addAction('Open camera \u2013 Photo '+(i+1),()=>openCamera(src)));
       else addAction('Open camera',()=>openCamera(overlay));
-      const t=document.createElement('p'); t.className='mono'; t.style.color='var(--coral)'; t.textContent='TIP: TURN YOUR PHONE SIDEWAYS (LANDSCAPE)'; $('ptActions').appendChild(t);
+      const t=document.createElement('p'); t.className='mono'; t.style.color='var(--coral)'; t.textContent=(await tipFor(pt)).replace(' FOR THE BEST VIEW',''); if(curPt!==myPt) return; $('ptActions').appendChild(t);
     } else { const n=document.createElement('p'); n.textContent='The AR view for this point is coming soon.'; $('ptActions').appendChild(n); }
   }
   if(pt.panorama && await exists(a.pano)){ addAction('Look around in 360°',()=>openPano(a.pano)); }
@@ -753,6 +779,7 @@ function arrive(pt){
     $('arGo').textContent=pt.panorama?'Open 360° view':'Open camera'; $('arAlt').style.display='none';
   }
   $('arTip').style.display=pt.panorama?'none':'block';
+  if(!pt.panorama) tipFor(pt).then(t=>{ if(arPt===pt) $('arTip').textContent=t; });
   $('arModal').classList.add('on');
 }
 $('arGo').onclick=()=>{ $('arModal').classList.remove('on'); if(arPt) openPoint(arPt,(arPt.views&&arPt.views.length>2)?undefined:'ar'); };
