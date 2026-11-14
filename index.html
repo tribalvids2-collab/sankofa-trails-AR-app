@@ -292,10 +292,9 @@ const PLACES = [
       {n:3,title:'Point 3',lat:13.120834,lon:-59.564031,panorama:true},
       {n:4,title:'Point 4',lat:13.120832,lon:-59.562881,ar:true,gallery:['','b'],r:16}
     ]},
-  /* Tent Bay and Joe's River are switched on for testers only (open the link with ?dev1966). Everyone else sees "Coming soon".
-     Tent Bay: points still incomplete and may be redone; outer zone is provisional until all points are final.
+  /* Tent Bay: points still incomplete and may be redone; outer zone is provisional until all points are final.
      Joe's River: point 1 still to be confirmed; outer zone provisional. 'views' = the pictures (and audio) at one point, shown as View A / View B. */
-  { id:'tentbay', name:'Tent Bay', alt:'Bathsheba', devOnly:true, soon:true,
+  { id:'tentbay', name:'Tent Bay', alt:'Bathsheba',
     center:{lat:13.212034, lon:-59.517328}, radius:440, pointRadius:10,
     points:[
       /* 2026-11-10: user's list. Folder 1 (point-1 + point-2, 4 m apart) stays at its spot. The user added a NEW extra trigger at
@@ -310,7 +309,7 @@ const PLACES = [
       {n:6,title:'Point 6',lat:13.212381,lon:-59.519028,ar:true,views:['point-6']},
       {n:7,title:'Point 7',lat:13.212791,lon:-59.520172,ar:true,views:['point-7']}
     ]},
-  { id:'joesriver', name:"Joe's River", devOnly:true, soon:true,
+  { id:'joesriver', name:"Joe's River",
     center:{lat:13.216024, lon:-59.526703}, radius:180, pointRadius:10,
     points:[
       /* 2026-11-10: coordinates from the user. Naming rule: trigger number first, then a letter for each extra view
@@ -978,7 +977,7 @@ $('markBtn').onclick=markSpot;
 
 buildWelcome();
 /* ---------- Testing mode (developers only) ---------- */
-// Open the link with ?dev1966 to switch on testing mode and the hidden trails (Tent Bay, Joe's River); the phone/browser then remembers it.
+// Open the link with ?dev1966 to switch on testing mode; the phone/browser then remembers it.
 // ?devoff switches it off again on that phone/browser. Plain ?dev no longer does anything. Visitors never see testing mode.
 // This is a hidden door, not security: do not put anything private behind it.
 const DEV_KEY='dev1966';
