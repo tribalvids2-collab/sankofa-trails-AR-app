@@ -278,8 +278,10 @@ const PLACES = [
       {n:1,title:'Point 1',lat:13.098320,lon:-59.607776,ar:true},
       {n:2,title:'Point 2',lat:13.097232,lon:-59.607662,ar:true},
       {n:3,title:'Point 3',lat:13.096284,lon:-59.608712,ar:true},
-      {n:4,title:'Point 4',lat:13.095928,lon:-59.608854,options:['a','b'],ar:true,hint:'Stand on the bridge and face west.'},
-      {n:5,title:'Point 5',lat:13.097006,lon:-59.607250,ar:true}
+      {n:4,title:'Point 4',lat:13.097081,lon:-59.610634,options:['a','b'],ar:true,hint:'Stand on the bridge and face west.'}   /* 2026-11-13: back to the original coordinate (it worked on the bridge); 13.095928,-59.608854 was a mistake caused by a client mix-up. A sixth trigger (3b, other side of the river, same content as point 3) is still to be added. */,
+      {n:5,title:'Point 5',lat:13.097006,lon:-59.607250,ar:true},
+      /* 2026-11-13: sixth trigger ("3b"), on the other side of the river from point 3; shows exactly what point 3 shows (its photo and audio). */
+      {n:6,title:'Point 6',lat:13.095859,lon:-59.608704,ar:true,views:['point-3b']}
     ]},
   { id:'salters', name:'Salters',
     center:{lat:13.120316, lon:-59.565813}, radius:361, pointRadius:10,
@@ -290,7 +292,7 @@ const PLACES = [
       {n:3,title:'Point 3',lat:13.120834,lon:-59.564031,panorama:true},
       {n:4,title:'Point 4',lat:13.120832,lon:-59.562881,ar:true,gallery:['','b'],r:16}
     ]},
-  /* Tent Bay and Joe's River are switched on for testers only (open the link with ?dev). Everyone else sees "Coming soon".
+  /* Tent Bay and Joe's River are switched on for testers only (open the link with ?dev1966). Everyone else sees "Coming soon".
      Tent Bay: points still incomplete and may be redone; outer zone is provisional until all points are final.
      Joe's River: point 1 still to be confirmed; outer zone provisional. 'views' = the pictures (and audio) at one point, shown as View A / View B. */
   { id:'tentbay', name:'Tent Bay', alt:'Bathsheba', devOnly:true, soon:true,
@@ -345,7 +347,7 @@ setPP('introPlay',true); setPP('ptsIntroPlay',true); setPP('storyPlay',false); s
 let DEV_FLAG=false;
 document.addEventListener('contextmenu',e=>{ if(!DEV_FLAG) e.preventDefault(); });
 document.addEventListener('dragstart',e=>e.preventDefault());
-/* extra deterrents (outside ?dev): no printing, no save/print shortcuts, no copying. A browser cannot stop a phone screenshot or a screen recording. */
+/* extra deterrents (outside ?dev1966): no printing, no save/print shortcuts, no copying. A browser cannot stop a phone screenshot or a screen recording. */
 document.addEventListener('copy',e=>{ if(!DEV_FLAG) e.preventDefault(); });
 document.addEventListener('cut',e=>{ if(!DEV_FLAG) e.preventDefault(); });
 document.addEventListener('keydown',e=>{ if(DEV_FLAG) return; const k=(e.key||'').toLowerCase(); if((e.ctrlKey||e.metaKey)&&(k==='s'||k==='p'||k==='u')) e.preventDefault(); });
@@ -479,8 +481,17 @@ function checkZone(p){
     },e=>{ m.innerHTML='<div class="banner err">Could not find your location ('+(e.code===1?'location permission is blocked':'no GPS signal')+').</div>'; res(false); },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
   });
 }
+/* ---------- Usage counter (counts only: which trail, which AR point, nothing about the person) ---------- */
+// Sent to the site's own /api/count function. Never counted in testing (?dev1966), and each trail / AR point is counted once per visit.
+function countEvent(type,n){
+  try{
+    if(DEV || !place || MODE!=='public') return;
+    const k='cnt:'+place.id+':'+type+':'+n; if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1');
+    fetch('/api/count',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({trail:place.id,type:type,n:n}),keepalive:true}).catch(()=>{});
+  }catch(e){}
+}
 function startPlace(p){
-  place=p;
+  place=p; countEvent('trail',0);
   $('introTitle').textContent=p.name+(p.alt?' ('+p.alt+')':'');
   $('introMsg').innerHTML=''; $('introGo').textContent='Skip to options';
   introQueue=[{src:GENERAL_INTRO,label:'Welcome'}];
@@ -764,7 +775,7 @@ async function openPoint(pt,mode){
 /* ---------- Arriving at an AR point ---------- */
 let arPt=null;
 function arrive(pt){
-  if(!pt||(current!=='points'&&current!=='point')) return; arPt=pt; chime(); try{ navigator.vibrate&&navigator.vibrate([120,60,120]); }catch(e){}
+  if(!pt||(current!=='points'&&current!=='point')) return; arPt=pt; countEvent('point',pt.n); chime(); try{ navigator.vibrate&&navigator.vibrate([120,60,120]); }catch(e){}
   if(pt.views && pt.views.length>2){
     $('arText').textContent='This spot is a folder of '+pt.views.length+' AR views. Choose the one you want to see.';
     $('arGo').textContent='Choose an AR view'; $('arAlt').style.display='none';
@@ -919,11 +930,19 @@ document.addEventListener('visibilitychange',()=>{
   if(current==='points'||current==='point'){ stopGPS(); pending={id:null,count:0}; startGPS(); log('returned to app, GPS restarted'); }
 });
 function resume(){
+  // After a reload (phone locked, tab put to sleep) the app does NOT jump straight back into the trail: a page that has not been tapped yet cannot
+  // add Back-button steps that Chrome will honour, so the Back button would skip them and leave the app. Instead a "Continue" card appears on the
+  // landing page; tapping it (a real tap) rebuilds the screens properly.
   try{
     const r=JSON.parse(localStorage.getItem('sankofaResume')||'null');
     if(r && Date.now()-r.t<3*3600*1000){
       const p=PLACES.find(x=>x.id===r.p && !x.soon);
-      if(p){ place=p; fillOptions(); openPointsScreenResume(); }
+      if(p){
+        const L=$('placeList'), c=document.createElement('button'); c.className='card'; c.id='resumeCard';
+        c.innerHTML='<div class="row"><div><h3>Continue '+p.name+'</h3><p style="margin:2px 0 0">Pick up where you left off</p></div><span class="tag live">WELCOME BACK</span></div>';
+        c.onclick=()=>{ c.remove(); unlockAudio(); place=p; fillOptions(); openPointsScreenResume(); };
+        L.parentNode.insertBefore(c,L);
+      }
     }
   }catch(e){}
 }
@@ -958,12 +977,15 @@ $('markBtn').onclick=markSpot;
 /* Phone Back button: handled by the history layers above. */
 
 buildWelcome();
-/* ---------- Testing mode (only for people who opened the link with ?dev) ---------- */
-// To lock testing mode behind a secret number later, set DEV_CODE to e.g. '482913' (then the link is ?dev=482913).
-const DEV_CODE='';
-(function(){ const q=new URLSearchParams(location.search), want=DEV_CODE||'1';
-  const okParam=q.has('dev') && (DEV_CODE==='' || q.get('dev')===DEV_CODE);
-  try{ if(okParam) localStorage.setItem('sankofaDev',want); DEV=localStorage.getItem('sankofaDev')===want; }catch(e){ DEV=okParam; } })();
+/* ---------- Testing mode (developers only) ---------- */
+// Open the link with ?dev1966 to switch on testing mode and the hidden trails (Tent Bay, Joe's River); the phone/browser then remembers it.
+// ?devoff switches it off again on that phone/browser. Plain ?dev no longer does anything. Visitors never see testing mode.
+// This is a hidden door, not security: do not put anything private behind it.
+const DEV_KEY='dev1966';
+(function(){ const q=new URLSearchParams(location.search);
+  try{ localStorage.removeItem('sankofaDev'); }catch(e){}   // the old ?dev flag is retired
+  const on=q.has(DEV_KEY), off=q.has('devoff');
+  try{ if(off){ localStorage.removeItem('sankofaDevKey'); localStorage.removeItem('sankofaMode'); } if(on) localStorage.setItem('sankofaDevKey',DEV_KEY); DEV=!off && (on || localStorage.getItem('sankofaDevKey')===DEV_KEY); }catch(e){ DEV=on&&!off; } })();
 DEV_FLAG=DEV;
 PLACES.forEach(p=>{ if(p.devOnly) p.soon=!DEV; }); buildWelcome();
 try{ if(DEV){ const m=localStorage.getItem('sankofaMode'); if(m==='desk'||m==='field') MODE=m; } }catch(e){}

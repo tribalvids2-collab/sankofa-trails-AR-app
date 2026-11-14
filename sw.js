@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sankofa-trails-v5';
+const CACHE_NAME = 'sankofa-trails-v6';
 const CORE_ASSETS = [
   './',
   './index.html',

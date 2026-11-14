@@ -1,0 +1,8 @@
+{
+  "name": "sankofa-trails",
+  "private": true,
+  "description": "Sankofa Trails: static app plus a tiny usage counter (Netlify Functions + Netlify Blobs).",
+  "dependencies": {
+    "@netlify/blobs": "11.1.6"
+  }
+}
