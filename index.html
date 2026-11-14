@@ -136,7 +136,7 @@ body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
       <button class="btn ghost modeBtn" data-mode="desk" style="padding:10px 6px;font-size:.8rem;margin:0">Desk test</button>
       <button class="btn ghost modeBtn" data-mode="field" style="padding:10px 6px;font-size:.8rem;margin:0">Field test</button>
     </div>
-    <p class="mono" style="margin-top:8px">PUBLIC: as visitors see it. DESK: fake location. FIELD: real GPS, trails open only inside their zone.</p>
+    <p class="mono" style="margin-top:8px">PUBLIC: as visitors see it (trails open only inside their zone for visitors; testers can open them from anywhere). DESK: fake location. FIELD: real GPS, trails open only inside their zone.</p>
     <div class="mono" id="devLog" style="white-space:pre-wrap;margin-top:8px"></div>
   </details>
 </section>
@@ -292,7 +292,8 @@ const PLACES = [
       {n:3,title:'Point 3',lat:13.120834,lon:-59.564031,panorama:true},
       {n:4,title:'Point 4',lat:13.120832,lon:-59.562881,ar:true,gallery:['','b'],r:16}
     ]},
-  /* Tent Bay: points still incomplete and may be redone; outer zone is provisional until all points are final.
+  /* Tent Bay and Joe's River are switched on for testers only (open the link with ?dev1966). Everyone else sees "Coming soon".
+     Tent Bay: points still incomplete and may be redone; outer zone is provisional until all points are final.
      Joe's River: point 1 still to be confirmed; outer zone provisional. 'views' = the pictures (and audio) at one point, shown as View A / View B. */
   { id:'tentbay', name:'Tent Bay', alt:'Bathsheba',
     center:{lat:13.212034, lon:-59.517328}, radius:440, pointRadius:10,
@@ -465,7 +466,7 @@ function buildWelcome(){
 let introQueue=[], introIdx=0, introOn=false;
 function openPlace(p){
   unlockAudio();
-  if(MODE==='field'){ checkZone(p).then(ok=>{ if(ok) startPlace(p); }); return; }
+  if(MODE==='field' || (MODE==='public' && !DEV)){ checkZone(p).then(ok=>{ if(ok) startPlace(p); }); return; }   // visitors can only open a trail from inside its zone (testers on ?dev1966 can open them from anywhere)
   startPlace(p);
 }
 function checkZone(p){
@@ -977,7 +978,7 @@ $('markBtn').onclick=markSpot;
 
 buildWelcome();
 /* ---------- Testing mode (developers only) ---------- */
-// Open the link with ?dev1966 to switch on testing mode; the phone/browser then remembers it.
+// Open the link with ?dev1966 to switch on testing mode and the hidden trails (Tent Bay, Joe's River); the phone/browser then remembers it.
 // ?devoff switches it off again on that phone/browser. Plain ?dev no longer does anything. Visitors never see testing mode.
 // This is a hidden door, not security: do not put anything private behind it.
 const DEV_KEY='dev1966';
