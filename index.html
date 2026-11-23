@@ -108,6 +108,29 @@ body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .storyDock .player{background:rgba(13,27,28,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);max-width:520px;margin:0 auto}
 .storyDock .notice{max-width:520px;margin:10px auto 0;text-align:center}
 .logoMark{width:44px;height:44px;border-radius:10px;background:url('images/logo-app.png') center/cover no-repeat;flex:none;display:block}
+.creditsBtn{display:block;margin:18px auto 0;background:none;border:1px solid var(--line);color:var(--text-dim);font-family:var(--mono);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;padding:10px 22px;border-radius:999px;cursor:pointer}
+.creditsBtn:active{border-color:var(--coral);color:var(--coral)}
+.modal.credits{display:none;align-items:flex-start;justify-content:center;padding:0;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:80}
+.modal.credits.on{display:block}
+.creditsCard{max-width:none;margin:0;padding:max(14px,env(safe-area-inset-top)) max(22px,4vw) max(28px,env(safe-area-inset-bottom));text-align:left}
+.creditsHead{display:flex;justify-content:flex-start;margin:0 0 18px}
+.creditsFoot{margin:26px 0 0}
+.creditsCard .btn{width:auto;padding:9px 20px;margin:0;font-size:.85rem}
+.creditsBody{font-size:1rem;line-height:1.5;color:var(--text)}
+.creditsBody .e img{display:block;height:auto;margin:0 0 8px;-webkit-user-drag:none;pointer-events:none}
+.creditsBody .e img.lsh{width:112px}
+.creditsBody .e img.lcv{width:132px}
+.creditsBody h1{margin:0 0 14px;font-family:var(--sans);font-size:1.45rem;font-weight:700;letter-spacing:0;line-height:1.2}
+.creditsBody h2{margin:26px 0 14px;font-family:var(--sans);font-size:1.15rem;font-weight:700;line-height:1.3}
+.creditsBody h1+h2{margin-top:0}
+.creditsBody h3{margin:20px 0 10px;font-family:var(--sans);font-size:1rem;font-weight:700;line-height:1.35}
+.creditsBody .e{margin:0 0 16px}
+.creditsBody .e b{display:block;font-weight:700}
+.creditsBody .e span{display:block}
+.creditsBody ul{margin:0 0 6px;padding-left:24px;list-style:disc}
+.creditsBody li{margin:0 0 6px;color:var(--text);font-size:.95rem}
+.creditsBody p{margin:0 0 16px;color:var(--text);font-size:.95rem}
+.creditsBody hr{border:0;border-top:1px solid var(--line);margin:22px 0 4px}
 .modal{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:20px}
 .modal.on{display:flex}
 .modalCard{background:var(--bg-raised);border:1px solid var(--coral-dim);border-radius:20px;padding:22px;max-width:380px;width:100%;text-align:center}
@@ -129,6 +152,7 @@ body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
   <div id="zoneMsg"></div>
   <p class="notice">Use headphones if you can, keep your volume up, and stay aware of traffic and uneven ground as you walk. Tap a trail to begin; you will be asked to allow location access so the app knows when you reach each point.</p>
   <p class="notice" style="margin-top:8px">&copy; 2026 Sankofa Trails. The pictures, audio and stories in this app are protected by copyright. Please do not copy, record or share them.</p>
+  <button class="creditsBtn" id="creditsBtn" type="button">Credits</button>
   <details class="dev" id="dev" style="display:none">
     <summary>Testing mode: <span id="modeName">Public</span></summary>
     <div style="display:flex;gap:6px;margin-top:10px">
@@ -251,6 +275,83 @@ body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
   <button class="btn primary" id="arAlt" style="display:none">See the maps</button>
   <button class="btn ghost" id="arLater">Not now</button>
   <p class="notice">Look up. Stay aware of traffic and your surroundings, and do not walk while looking at your screen.</p>
+</div></div>
+<div class="modal credits" id="creditsModal" role="dialog" aria-modal="true" aria-labelledby="creditsTitle"><div class="creditsCard">
+  <div class="creditsHead"><button class="btn ghost" id="creditsClose" type="button">Close</button></div>
+  <div class="creditsBody">
+    <h1 id="creditsTitle">SANKOFA TRAILS</h1>
+    <h2>Official Production &amp; Contributor Credits</h2>
+
+    <h2>Production &amp; Application Development</h2>
+    <div class="e"><img class="lsh" src="images/logo-storyshyft.png" alt="Story Shyft logo" width="800" height="496"><b>Story Shyft</b><span>Production</span></div>
+    <div class="e"><img class="lcv" src="images/logo-caribbeanvr.png" alt="Caribbean VR logo" width="239" height="95"><b>Caribbean VR</b><span>Application Design, Development &amp; AR Implementation</span></div>
+    <div class="e"><b>Maurice Durant &mdash; Caribbean VR</b><span>Technical Lead / Application Developer</span></div>
+
+    <h2>Production Support &amp; Partnerships</h2>
+    <div class="e"><b>Super Nova Labs</b><span>Production Support</span></div>
+    <div class="e"><b>Future Centre Trust</b><span>Barbados Trailway Project</span></div>
+
+    <h2>Story Writing</h2>
+    <div class="e"><b>Dr. Karen Lord</b><span>Writer of all four speculative fiction stories</span></div>
+
+    <h2>Narration &amp; Illustrations</h2>
+    <h3>Bridgetown &mdash; The Fall and Rise and Fall of Upper and Lower Bridgetown</h3>
+    <ul><li>Writer: Dr. Karen Lord</li><li>Narrator: Cyndi Celeste</li><li>Illustration: Russell Watson &mdash; RStudio Barbados</li></ul>
+    <h3>Salter's / Dash Valley &mdash; The Hollow</h3>
+    <ul><li>Writer: Dr. Karen Lord</li><li>Narrator: Nala</li><li>Illustration: Matthew Clarke</li></ul>
+    <h3>Joe's River &mdash; The Old Footbridge</h3>
+    <ul><li>Writer: Dr. Karen Lord</li><li>Narrator: Nailah Imoja</li><li>Illustration: Alanis Forde</li></ul>
+    <h3>Tent Bay / Bathsheba &mdash; The Commons</h3>
+    <ul><li>Writer: Dr. Karen Lord</li><li>Narrator: Nick Hoyte</li><li>Illustration: Cherise Harris</li></ul>
+
+    <h2>Archival Images &amp; Historical Materials</h2>
+    <div class="e"><b>Barbados National Trust</b><span>Historical photographic collection</span></div>
+    <div class="e"><b>Barbados Museum &amp; Historical Society (BM&amp;HS)</b><span>Historical photographic and archival collection</span></div>
+    <div class="e"><b>Glen Beadon</b><span>Historical railway image contributions</span></div>
+    <div class="e"><b>Estate of Jim Horseford</b><span>Copyright attribution &mdash; <i>The Barbados Railway</i></span></div>
+
+    <h2>Detailed Archival Image Acknowledgments</h2>
+    <h3>Bridgetown</h3>
+    <ul>
+      <li>Constitution River &mdash; Barbados National Trust</li>
+      <li>Barbados Railway Station &mdash; Barbados Museum &amp; Historical Society</li>
+      <li>Railway Terminal Yard, 1880s &mdash; Glen Beadon / Estate of Jim Horseford</li>
+      <li>Goad Insurance Map of Bridgetown, 1895 &mdash; Barbados Museum &amp; Historical Society</li>
+      <li>Barbados Railway Terminal, 1880s &mdash; Glen Beadon / Estate of Jim Horseford</li>
+    </ul>
+    <h3>Salter's / Dash Valley</h3>
+    <ul>
+      <li>Bulkeley Railway Station, 1920s &mdash; Glen Beadon / Estate of Jim Horseford</li>
+      <li>Labourers in a Field &mdash; Barbados Museum &amp; Historical Society</li>
+      <li><i>The Hollow</i> Imagination Illustration &mdash; Matthew Clarke</li>
+      <li>Feeding the Mill at Bulkeley &mdash; Barbados Museum &amp; Historical Society</li>
+    </ul>
+    <h3>Joe's River</h3>
+    <ul>
+      <li>Belleplaine-Bound Train on Joe's River, 1900s &mdash; Glen Beadon / Estate of Jim Horseford</li>
+      <li>Joe's River Bridge &mdash; Barbados Museum &amp; Historical Society</li>
+      <li>Joe's River Weir &mdash; Barbados Museum &amp; Historical Society</li>
+      <li>Joe's River Bridge, 1900s &mdash; Glen Beadon / Estate of Jim Horseford</li>
+      <li>Joe's River Bridge, 1900s (second archival view) &mdash; Glen Beadon / Estate of Jim Horseford</li>
+    </ul>
+    <h3>Tent Bay / Bathsheba</h3>
+    <ul>
+      <li>Locomotive No. 1 at Tent Bay, 1930s &mdash; Glen Beadon / Estate of Jim Horseford</li>
+      <li>Atlantis Hotel, 1930s &mdash; Glen Beadon / Estate of Jim Horseford</li>
+      <li>South Bound Train &mdash; Barbados National Trust</li>
+      <li>Tent Bay Bathsheba &mdash; Barbados Museum &amp; Historical Society</li>
+      <li>Bathsheba Station &mdash; Barbados National Trust</li>
+      <li>Tent Bay Leaving Bathsheba, Early 1920s &mdash; Barbados Museum &amp; Historical Society</li>
+      <li>Tracks South View &mdash; Barbados National Trust</li>
+    </ul>
+
+    <hr>
+    <h2>Additional Acknowledgments</h2>
+    <p>Sankofa Trails is a Story Shyft production, developed as an interactive application by Caribbean VR, with support from Super Nova Labs.</p>
+    <p>The experience takes visitors on a journey through imagined futures and historical landscapes across four locations along the Future Centre Trust's Barbados Trailway.</p>
+    <p>Special acknowledgment is given to the writers, narrators, illustrators, archival institutions, historical image contributors, and technical production team whose work made this experience possible.</p>
+  </div>
+  <div class="creditsFoot"><button class="btn ghost" id="creditsClose2" type="button">Close</button></div>
 </div></div>
 <div class="modal" id="unlockModal"><div class="modalCard">
   <h2>Unlock this AR point?</h2>
@@ -673,6 +774,11 @@ function renderPoints(){
     L.appendChild(el);
   });
 }
+/* ---------- Credits (opens from the button at the bottom of the landing page; Back closes it) ---------- */
+function closeCredits(){ $('creditsModal').classList.remove('on'); }
+$('creditsBtn').onclick=()=>{ $('creditsModal').classList.add('on'); $('creditsModal').scrollTop=0; openOverlay('credits',closeCredits); };
+$('creditsClose').onclick=()=>endOverlay('credits',closeCredits);
+$('creditsClose2').onclick=()=>endOverlay('credits',closeCredits);
 /* ---------- manual unlock (a short wait and a confirmation, so it is not tapped by accident) ---------- */
 let unlockTimer=null;
 $('unlockBtn').onclick=()=>{
